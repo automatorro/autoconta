@@ -1,4 +1,4 @@
-import { Bell, User, ChevronDown, AlertTriangle } from "lucide-react";
+import { Bell, User, ChevronDown, AlertTriangle, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,16 +11,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useAppStore";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface AppHeaderProps {
   className?: string;
 }
 
 export function AppHeader({ className }: AppHeaderProps) {
-  // Mock data - va fi conectat la store-ul real
-  const alertsCount = 5;
-  const userName = "Popescu Transport SRL";
+  const { authUser, user, getActiveAlerts } = useAppStore();
+  const { signOut } = useAuth();
+  const alerts = getActiveAlerts();
+  const alertsCount = alerts.length;
+  const userName = authUser?.email || user.company?.name || "Utilizator";
   const currentMonth = "Noiembrie 2024";
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Eroare la deconectare');
+    } else {
+      toast.success('V-ați deconectat cu succes');
+    }
+  };
   
   return (
     <header className={cn(
@@ -132,9 +146,11 @@ export function AppHeader({ className }: AppHeaderProps) {
             <DropdownMenuLabel>Contul meu</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
               Profil firmă
             </DropdownMenuItem>
             <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
               Setări notificări  
             </DropdownMenuItem>
             <DropdownMenuItem>
@@ -144,7 +160,8 @@ export function AppHeader({ className }: AppHeaderProps) {
             <DropdownMenuItem>
               Suport tehnic
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
               Deconectare
             </DropdownMenuItem>
           </DropdownMenuContent>

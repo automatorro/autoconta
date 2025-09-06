@@ -1,8 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AppState, Company, Vehicle, Driver, Document, Alert } from '@/types/accounting';
+import { User, Session } from '@supabase/supabase-js';
 
 interface AppStore extends AppState {
+  // Auth state
+  authUser: User | null;
+  session: Session | null;
+  
+  // Auth actions
+  setUser: (user: User | null) => void;
+  setSession: (session: Session | null) => void;
+  
   // Actions
   setCompany: (company: Company) => void;
   addVehicle: (vehicle: Vehicle) => void;
@@ -54,6 +63,14 @@ export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => ({
       ...initialState,
+      
+      // Auth state
+      authUser: null,
+      session: null,
+      
+      // Auth actions
+      setUser: (authUser) => set(() => ({ authUser })),
+      setSession: (session) => set(() => ({ session })),
       
       // Company actions
       setCompany: (company) => set((state) => ({

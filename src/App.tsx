@@ -6,15 +6,33 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
+import Auth from "./pages/Auth";
+import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { useAppStore } from "@/store/useAppStore";
+import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { user } = useAppStore();
+  const { authUser, user } = useAppStore();
   const hasCompany = user.company !== null;
+  
+  // Initialize auth hook
+  useAuth();
+  
+  // If not authenticated, show auth page
+  if (!authUser) {
+    return (
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
 
+  // If authenticated, show main app
   return (
     <Routes>
       {!hasCompany ? (
