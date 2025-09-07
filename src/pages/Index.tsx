@@ -9,10 +9,10 @@ export default function Index() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center space-y-6 max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground">
-            DriverConta
+            AutoConta
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground">
-            Contabilitate simplificată pentru șoferii Uber și Bolt
+            Contabilitate online pentru șoferi și flote Uber/Bolt
           </p>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Automatizează procesarea documentelor, reconcilierea datelor și 
@@ -81,7 +81,7 @@ export default function Index() {
             Gata să îți simplifici contabilitatea?
           </h2>
           <p className="text-lg text-muted-foreground">
-            Alătură-te șoferilor profesioniști care economisesc timp și bani cu DriverConta
+            Alătură-te șoferilor profesioniști care economisesc timp și bani cu AutoConta
           </p>
           <Link to="/auth">
             <Button size="lg" className="text-lg px-8 py-6">

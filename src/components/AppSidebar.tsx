@@ -118,10 +118,10 @@ export function AppSidebar() {
           {!isCollapsed && (
             <div>
               <h2 className="font-semibold text-sidebar-foreground">
-                ContaUber
+                AutoConta
               </h2>
               <p className="text-xs text-muted-foreground">
-                Contabilitate Profesională
+                Contabilitate online
               </p>
             </div>
           )}
@@ -249,7 +249,7 @@ export function AppSidebar() {
               Versiunea 1.0.0
             </p>
             <p className="text-xs text-primary font-medium">
-              ContaUber Pro România
+              AutoConta Pro România
             </p>
           </div>
         )}

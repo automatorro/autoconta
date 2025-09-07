@@ -104,9 +104,9 @@ export default function Auth() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">DriverConta</h1>
+          <h1 className="text-3xl font-bold text-foreground">AutoConta</h1>
           <p className="text-muted-foreground">
-            Contabilitate simplificată pentru șoferii profesioniști
+            Contabilitate online pentru șoferi și flote Uber/Bolt
           </p>
         </div>
 
