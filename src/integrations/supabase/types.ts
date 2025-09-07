@@ -14,7 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          category: string
+          created_at: string
+          currency: string
+          date: string
+          description: string
+          document_number: string
+          file_path: string
+          id: string
+          net_amount: number
+          ocr_confidence: number | null
+          ocr_corrections: Json | null
+          ocr_extracted_amount: number | null
+          ocr_extracted_cif: string | null
+          ocr_extracted_date: string | null
+          ocr_extracted_supplier: string | null
+          ocr_extracted_text: string | null
+          reconciled: boolean
+          supplier_address: string | null
+          supplier_cif: string
+          supplier_name: string
+          total_amount: number
+          type: string
+          updated_at: string
+          user_id: string
+          vat_amount: number
+          vat_rate: number
+          vehicle_id: string | null
+          verified: boolean
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          currency?: string
+          date: string
+          description: string
+          document_number: string
+          file_path: string
+          id?: string
+          net_amount?: number
+          ocr_confidence?: number | null
+          ocr_corrections?: Json | null
+          ocr_extracted_amount?: number | null
+          ocr_extracted_cif?: string | null
+          ocr_extracted_date?: string | null
+          ocr_extracted_supplier?: string | null
+          ocr_extracted_text?: string | null
+          reconciled?: boolean
+          supplier_address?: string | null
+          supplier_cif: string
+          supplier_name: string
+          total_amount?: number
+          type: string
+          updated_at?: string
+          user_id: string
+          vat_amount?: number
+          vat_rate?: number
+          vehicle_id?: string | null
+          verified?: boolean
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          currency?: string
+          date?: string
+          description?: string
+          document_number?: string
+          file_path?: string
+          id?: string
+          net_amount?: number
+          ocr_confidence?: number | null
+          ocr_corrections?: Json | null
+          ocr_extracted_amount?: number | null
+          ocr_extracted_cif?: string | null
+          ocr_extracted_date?: string | null
+          ocr_extracted_supplier?: string | null
+          ocr_extracted_text?: string | null
+          reconciled?: boolean
+          supplier_address?: string | null
+          supplier_cif?: string
+          supplier_name?: string
+          total_amount?: number
+          type?: string
+          updated_at?: string
+          user_id?: string
+          vat_amount?: number
+          vat_rate?: number
+          vehicle_id?: string | null
+          verified?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

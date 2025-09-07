@@ -23,6 +23,7 @@ interface AppStore extends AppState {
   addDocument: (document: Document) => void;
   updateDocument: (id: string, updates: Partial<Document>) => void;
   removeDocument: (id: string) => void;
+  getDocumentsByCategory: (category?: string) => Document[];
   addAlert: (alert: Alert) => void;
   dismissAlert: (id: string) => void;
   updateSettings: (settings: Partial<AppState['settings']>) => void;
@@ -37,6 +38,9 @@ interface AppStore extends AppState {
   }>;
   getTotalIncome: (month?: number, year?: number) => number;
   getTotalExpenses: (month?: number, year?: number) => number;
+  
+  // Convenience getters
+  vehicles: Vehicle[];
 }
 
 const initialState: AppState = {
@@ -139,6 +143,12 @@ export const useAppStore = create<AppStore>()(
       removeDocument: (id) => set((state) => ({
         documents: state.documents.filter(doc => doc.id !== id)
       })),
+
+      getDocumentsByCategory: (category) => {
+        const state = get();
+        if (!category || category === 'all') return state.documents;
+        return state.documents.filter(doc => doc.category === category);
+      },
       
       // Alert actions
       addAlert: (alert) => set((state) => ({
@@ -232,6 +242,12 @@ export const useAppStore = create<AppStore>()(
                    transactionDate.getFullYear() === targetDate.getFullYear();
           })
           .reduce((total, transaction) => total + transaction.amount, 0);
+      },
+      
+      // Convenience getters
+      get vehicles() {
+        const state = get();
+        return state.user.vehicles;
       }
     }),
     {
