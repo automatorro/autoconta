@@ -14,6 +14,7 @@ interface AppStore extends AppState {
   
   // Actions
   setCompany: (company: Company) => void;
+  setUserData: (userData: { id: string; email: string; setupCompleted: boolean; company: Company; vehicles: Vehicle[]; drivers: Driver[] }) => void;
   addVehicle: (vehicle: Vehicle) => void;
   updateVehicle: (id: string, updates: Partial<Vehicle>) => void;
   removeVehicle: (id: string) => void;
@@ -79,6 +80,14 @@ export const useAppStore = create<AppStore>()(
       // Company actions
       setCompany: (company) => set((state) => ({
         user: { ...state.user, company }
+      })),
+      
+      setUserData: (userData) => set(() => ({
+        user: {
+          company: userData.company,
+          vehicles: userData.vehicles,
+          drivers: userData.drivers
+        }
       })),
       
       // Vehicle actions

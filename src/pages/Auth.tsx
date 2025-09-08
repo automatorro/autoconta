@@ -33,7 +33,9 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
+      console.log('🔐 Starting login process for:', loginData.email);
       const { error } = await signIn(loginData.email, loginData.password);
+      console.log('🔐 Login result - Error:', error);
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           toast.error('Email sau parolă incorectă');
@@ -247,6 +249,31 @@ export default function Auth() {
             </CardContent>
 
             <CardFooter className="flex flex-col space-y-2">
+              <Button 
+                onClick={async () => {
+                  console.log('🧪 Testing with demo user...');
+                  setLoginData({ email: 'test@autoconta.ro', password: 'test123' });
+                  const { error } = await signIn('test@autoconta.ro', 'test123');
+                  if (error) {
+                    console.log('❌ Demo login failed:', error);
+                    toast.error('Demo user not found - creating one...');
+                    const { error: signupError } = await signUp('test@autoconta.ro', 'test123');
+                    if (signupError) {
+                      console.log('❌ Demo signup failed:', signupError);
+                      toast.error('Failed to create demo user');
+                    } else {
+                      toast.success('Demo user created! Please check email for verification.');
+                    }
+                  } else {
+                    console.log('✅ Demo login successful');
+                    toast.success('Demo login successful!');
+                  }
+                }}
+                variant="outline" 
+                className="w-full"
+              >
+                🧪 Test cu utilizator demo
+              </Button>
               <p className="text-xs text-muted-foreground text-center">
                 Prin continuare, accepți{' '}
                 <a href="#" className="underline hover:text-foreground">

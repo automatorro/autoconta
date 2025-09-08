@@ -9,6 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { useAppStore } from "@/store/useAppStore";
 import { Company } from "@/types/accounting";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const steps = [
   { id: 1, title: "Tip Entitate", icon: Building2, description: "PFA sau SRL" },
@@ -19,7 +21,9 @@ const steps = [
 
 export default function Setup() {
   const navigate = useNavigate();
-  const { setCompany, addVehicle, addDriver } = useAppStore();
+  const { setCompany, addVehicle, addDriver, authUser } = useAppStore();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     companyType: '' as 'PFA' | 'SRL' | '',
@@ -39,26 +43,89 @@ export default function Setup() {
     }
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Save company data and navigate to dashboard
-      const company: Company = {
-        id: crypto.randomUUID(),
-        name: formData.companyName,
-        cif: formData.cif,
-        cnp: formData.cnp || undefined,
-        type: formData.companyType as 'PFA' | 'SRL',
-        vatPayer: formData.vatPayer,
-        address: formData.address,
-        contact: formData.contact,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      if (!authUser) {
+        toast({
+          title: "Eroare",
+          description: "Nu sunteți autentificat",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setIsLoading(true);
+      console.log('💾 Starting to save company data for user:', authUser.id);
+      console.log('📋 Form data:', formData);
       
-      setCompany(company);
-      navigate('/dashboard');
+      try {
+        // Save user profile to Supabase
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .upsert({
+            user_id: authUser.id,
+            company_name: formData.companyName,
+            company_type: formData.companyType,
+            cif: formData.cif,
+            cnp: formData.cnp || null,
+            vat_payer: formData.vatPayer,
+            address_street: formData.address.street,
+            address_city: formData.address.city,
+            address_county: formData.address.county,
+            address_postal_code: formData.address.postalCode,
+            contact_phone: formData.contact.phone,
+            contact_email: formData.contact.email,
+            setup_completed: true
+          });
+        
+        console.log('📊 Profile save result - Error:', profileError);
+
+        if (profileError) {
+          console.log('❌ Profile save failed:', profileError);
+          throw profileError;
+        }
+        
+        console.log('✅ Profile saved successfully to Supabase!');
+
+        // Create company object for local store
+        const company: Company = {
+          id: crypto.randomUUID(),
+          name: formData.companyName,
+          cif: formData.cif,
+          cnp: formData.cnp || undefined,
+          type: formData.companyType as 'PFA' | 'SRL',
+          vatPayer: formData.vatPayer,
+          address: formData.address,
+          contact: formData.contact,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        console.log('🏢 Setting company in local store:', company);
+        setCompany(company);
+        
+        // Force reload of user data to reflect setup_completed status
+        console.log('🔄 Reloading page to refresh user data...');
+        
+        toast({
+          title: "Succes!",
+          description: "Configurarea inițială a fost completată cu succes"
+        });
+        
+        // Reload the page to ensure fresh data is loaded
+        window.location.href = '/dashboard';
+      } catch (error) {
+        console.error('Error saving setup data:', error);
+        toast({
+          title: "Eroare",
+          description: "A apărut o eroare la salvarea datelor. Încercați din nou.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -401,10 +468,10 @@ export default function Setup() {
           </Button>
           <Button
             onClick={handleNext}
-            disabled={!isStepValid()}
+            disabled={!isStepValid() || isLoading}
             className="gradient-primary"
           >
-            {currentStep === steps.length ? 'Finalizează' : 'Continuă'}
+            {isLoading ? 'Se salvează...' : (currentStep === steps.length ? 'Finalizează' : 'Continuă')}
           </Button>
         </div>
       </div>
