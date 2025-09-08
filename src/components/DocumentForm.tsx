@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
 import type { ExpenseCategory } from '@/types/accounting';
+import { useOCR } from '@/hooks/useOCR';
 
 const documentSchema = z.object({
   type: z.enum(['invoice', 'receipt', 'expense']),
@@ -67,7 +68,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const { toast } = useToast();
   const { authUser, addDocument, vehicles } = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [ocrProcessing, setOcrProcessing] = useState(false);
+  const { processImage, isProcessing } = useOCR();
 
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentSchema),
@@ -102,39 +103,25 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   }, [watchedValues.netAmount, watchedValues.vatRate, form]);
 
   const handleOcrExtraction = async () => {
-    setOcrProcessing(true);
     try {
-      // For now, simulate OCR processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const result = await processImage(file);
       
-      // Mock OCR data
-      const mockOcrData = {
-        supplierName: 'OMV Petrom',
-        supplierCif: 'RO12345678',
-        documentNumber: `DOC-${Date.now()}`,
-        totalAmount: 125.50,
-        netAmount: 105.46,
-        vatAmount: 20.04,
-        category: 'combustibil' as ExpenseCategory,
-        description: 'Combustibil motorină'
-      };
-
-      Object.entries(mockOcrData).forEach(([key, value]) => {
-        form.setValue(key as keyof DocumentFormData, value);
-      });
-
-      toast({
-        title: 'OCR Completat',
-        description: 'Datele au fost extrase automat. Verificați și corectați dacă este necesar.'
-      });
+      if (result) {
+        // Map OCR result to form fields
+        if (result.supplierName) form.setValue('supplierName', result.supplierName);
+        if (result.supplierCif) form.setValue('supplierCif', result.supplierCif);
+        if (result.documentNumber) form.setValue('documentNumber', result.documentNumber);
+        if (result.totalAmount) form.setValue('totalAmount', result.totalAmount);
+        if (result.netAmount) form.setValue('netAmount', result.netAmount);
+        if (result.vatAmount) form.setValue('vatAmount', result.vatAmount);
+        if (result.vatRate) form.setValue('vatRate', result.vatRate);
+        if (result.category) form.setValue('category', result.category);
+        if (result.description) form.setValue('description', result.description);
+        if (result.date) form.setValue('date', new Date(result.date));
+      }
     } catch (error) {
-      toast({
-        title: 'Eroare OCR',
-        description: 'Nu s-au putut extrage datele automat. Completați manual formularul.',
-        variant: 'destructive'
-      });
-    } finally {
-      setOcrProcessing(false);
+      // Error handling is done in the useOCR hook
+      console.error('OCR processing failed:', error);
     }
   };
 
@@ -230,11 +217,11 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
         <Button
           variant="outline"
           onClick={handleOcrExtraction}
-          disabled={ocrProcessing}
+          disabled={isProcessing}
           className="flex items-center gap-2"
         >
           <Zap className="w-4 h-4" />
-          {ocrProcessing ? 'Procesez...' : 'OCR Auto'}
+          {isProcessing ? 'Procesez...' : 'OCR Auto'}
         </Button>
       </div>
 
