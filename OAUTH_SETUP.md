@@ -1,7 +1,7 @@
 # Configurare OAuth pentru Dezvoltare Locală
 
 ## Problema
-Aplicația redirecționează către `autoconta.lovable.app` în loc de `localhost:8081` din cauza configurărilor OAuth.
+Aplicația redirecționează către `autoconta.lovable.app` în loc de `localhost:8080` din cauza configurărilor OAuth.
 
 ## Soluție
 
@@ -11,8 +11,8 @@ Aplicația redirecționează către `autoconta.lovable.app` în loc de `localhos
 2. Selectează proiectul `ytjdvoyyiapkyzjrjllp`
 3. Mergi la **Authentication** > **URL Configuration**
 4. Actualizează următoarele setări:
-   - **Site URL**: `http://localhost:8081`
-   - **Redirect URLs**: `http://localhost:8081/**`
+   - **Site URL**: `http://localhost:8080`
+   - **Redirect URLs**: `http://localhost:8080/**`
 
 ### 2. Configurare Google Cloud Console
 
@@ -22,7 +22,7 @@ Aplicația redirecționează către `autoconta.lovable.app` în loc de `localhos
 4. Găsește OAuth 2.0 Client ID-ul folosit pentru aplicație
 5. Editează și actualizează:
    - **Authorized JavaScript origins**: 
-     - `http://localhost:8081`
+     - `http://localhost:8080`
      - `https://autoconta.lovable.app` (pentru producție)
    - **Authorized redirect URIs**:
      - `https://ytjdvoyyiapkyzjrjllp.supabase.co/auth/v1/callback`
@@ -31,7 +31,7 @@ Aplicația redirecționează către `autoconta.lovable.app` în loc de `localhos
 
 1. Salvează toate modificările
 2. Așteaptă 5-10 minute pentru propagarea modificărilor
-3. Testează autentificarea pe `http://localhost:8081`
+3. Testează autentificarea pe `http://localhost:8080`
 
 ## Note Importante
 

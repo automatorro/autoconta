@@ -107,6 +107,171 @@ export type Database = {
         }
         Relationships: []
       }
+      drivers: {
+        Row: {
+          cnp: string
+          contract_type: string | null
+          created_at: string
+          email: string | null
+          hire_date: string | null
+          id: string
+          license_category: string
+          license_expiry_date: string
+          license_number: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cnp: string
+          contract_type?: string | null
+          created_at?: string
+          email?: string | null
+          hire_date?: string | null
+          id?: string
+          license_category: string
+          license_expiry_date: string
+          license_number: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cnp?: string
+          contract_type?: string | null
+          created_at?: string
+          email?: string | null
+          hire_date?: string | null
+          id?: string
+          license_category?: string
+          license_expiry_date?: string
+          license_number?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          address_city: string | null
+          address_county: string | null
+          address_postal_code: string | null
+          address_street: string | null
+          cif: string | null
+          cnp: string | null
+          company_name: string | null
+          company_type: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          setup_completed: boolean
+          updated_at: string
+          user_id: string
+          vat_payer: boolean | null
+        }
+        Insert: {
+          address_city?: string | null
+          address_county?: string | null
+          address_postal_code?: string | null
+          address_street?: string | null
+          cif?: string | null
+          cnp?: string | null
+          company_name?: string | null
+          company_type?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          setup_completed?: boolean
+          updated_at?: string
+          user_id: string
+          vat_payer?: boolean | null
+        }
+        Update: {
+          address_city?: string | null
+          address_county?: string | null
+          address_postal_code?: string | null
+          address_street?: string | null
+          cif?: string | null
+          cnp?: string | null
+          company_name?: string | null
+          company_type?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          setup_completed?: boolean
+          updated_at?: string
+          user_id?: string
+          vat_payer?: boolean | null
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          acquisition_date: string | null
+          acquisition_price: number | null
+          co2_emissions: number | null
+          created_at: string
+          depreciation_method: string | null
+          engine_capacity: number | null
+          fuel_type: string
+          id: string
+          license_plate: string
+          make: string
+          model: string
+          power_kw: number | null
+          updated_at: string
+          useful_life_years: number | null
+          user_id: string
+          vin: string | null
+          year: number
+        }
+        Insert: {
+          acquisition_date?: string | null
+          acquisition_price?: number | null
+          co2_emissions?: number | null
+          created_at?: string
+          depreciation_method?: string | null
+          engine_capacity?: number | null
+          fuel_type: string
+          id?: string
+          license_plate: string
+          make: string
+          model: string
+          power_kw?: number | null
+          updated_at?: string
+          useful_life_years?: number | null
+          user_id: string
+          vin?: string | null
+          year: number
+        }
+        Update: {
+          acquisition_date?: string | null
+          acquisition_price?: number | null
+          co2_emissions?: number | null
+          created_at?: string
+          depreciation_method?: string | null
+          engine_capacity?: number | null
+          fuel_type?: string
+          id?: string
+          license_plate?: string
+          make?: string
+          model?: string
+          power_kw?: number | null
+          updated_at?: string
+          useful_life_years?: number | null
+          user_id?: string
+          vin?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
