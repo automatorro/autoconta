@@ -204,16 +204,25 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
-    // Ensure we're using relative URLs for redirects to avoid cross-origin issues
-    const redirectUrl = '/';
+    // Use proper redirect URLs based on environment
+    const isProduction = window.location.hostname === 'autoconta.lovable.app' || window.location.hostname.includes('.lovable.app');
+    const isLocalhost = window.location.hostname === 'localhost';
+    
+    let redirectUrl = '/';
+    
+    if (isProduction) {
+      redirectUrl = `${window.location.origin}/`;
+    } else if (isLocalhost) {
+      redirectUrl = `${window.location.origin}/`;
+    }
+    
     console.log('🔗 Google OAuth redirect URL:', redirectUrl);
     console.log('🌐 Current origin:', window.location.origin);
     console.log('🌍 Current hostname:', window.location.hostname);
     
-    // Log whether we're on localhost or production
-    if (window.location.hostname === 'localhost') {
+    if (isLocalhost) {
       console.log('🧪 Running in local development environment');
-    } else {
+    } else if (isProduction) {
       console.log('🚀 Running in production environment');
     }
     

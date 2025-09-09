@@ -31,35 +31,30 @@ function AppRoutes() {
   // Initialize auth hook
   useAuth();
   
-  // Handle OAuth redirect from production to localhost
+  // Handle OAuth redirect and configuration detection
   React.useEffect(() => {
-    const handleOAuthRedirect = () => {
+    const handleOAuthConfig = () => {
       const currentUrl = window.location.href;
       console.log('🔄 Current URL:', currentUrl);
       
-      // Check if we're on production but should be on localhost
-      if (currentUrl.includes('autoconta.lovable.app')) {
-        console.log('⚠️ Detected production redirect, attempting to redirect to localhost');
+      // Check if we're in development mode (localhost)
+      if (window.location.hostname === 'localhost') {
+        console.log('🧪 Running in local development environment on port:', window.location.port);
         
-        // Extract hash and query parameters to preserve auth tokens
-        const hashPart = window.location.hash;
-        const searchPart = window.location.search;
+        // Only show configuration warning if OAuth fails, not automatically
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
         
-        // Construct the localhost URL with the same path, query params and hash
-        const localhostUrl = `http://localhost:8081${window.location.pathname}${searchPart}${hashPart}`;
-        console.log('🔄 Redirecting to:', localhostUrl);
-        
-        // Show alert to user about configuration issue
-        alert('⚠️ CONFIGURARE OAUTH NECESARĂ\n\nPentru a funcționa pe localhost, trebuie să actualizezi:\n\n1. Supabase Dashboard > Authentication > URL Configuration\n   - Site URL: http://localhost:8081\n   - Redirect URLs: http://localhost:8081/**\n\n2. Google Cloud Console > OAuth 2.0 Client IDs\n   - Authorized JavaScript origins: http://localhost:8081\n   - Authorized redirect URIs: https://ytjdvoyyiapkyzjrjllp.supabase.co/auth/v1/callback\n\nÎncercăm să te redirecționăm automat la localhost...');
-        
-        // Attempt to redirect automatically
-        try {
-          window.location.href = localhostUrl;
-          return; // Stop execution after redirect
-        } catch (error) {
-          console.error('❌ Failed to redirect automatically:', error);
-          alert('Nu am putut redirecționa automat. Te rugăm să navighezi manual la: ' + localhostUrl);
+        if (error || errorDescription) {
+          console.log('❌ OAuth error detected:', error, errorDescription);
+          
+          // Show configuration guidance only if there's an actual OAuth error
+          const port = window.location.port || '8080';
+          alert(`⚠️ CONFIGURARE OAUTH NECESARĂ\n\nPentru a funcționa pe localhost:${port}, trebuie să actualizezi:\n\n1. Supabase Dashboard > Authentication > URL Configuration\n   - Site URL: http://localhost:${port}\n   - Redirect URLs: http://localhost:${port}/**\n\n2. Google Cloud Console > OAuth 2.0 Client IDs\n   - Authorized JavaScript origins: http://localhost:${port}\n   - Authorized redirect URIs: https://ytjdvoyyiapkyzjrjllp.supabase.co/auth/v1/callback\n\nDupă actualizare, încearcă din nou autentificarea.`);
         }
+      } else {
+        console.log('🚀 Running in production environment');
       }
       
       // Handle hash fragments that might contain auth tokens
@@ -68,7 +63,7 @@ function AppRoutes() {
       }
     };
     
-    handleOAuthRedirect();
+    handleOAuthConfig();
   }, []);
   
   // If not authenticated, show auth page
