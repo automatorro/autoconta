@@ -1,4 +1,5 @@
 import { Bell, User, ChevronDown, AlertTriangle, Settings, LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -151,7 +152,9 @@ export function AppHeader({ className }: AppHeaderProps) {
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
-              Setări notificări  
+              <Link to="/settings" className="flex-1">
+                Setări și Management
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
               Backup & Export

@@ -28,6 +28,7 @@ export default function Setup() {
   const [formData, setFormData] = useState({
     companyType: '' as 'PFA' | 'SRL' | '',
     vatPayer: false,
+    vatIntraCommunity: '',
     companyName: '',
     cif: '',
     cnp: '',
@@ -71,6 +72,7 @@ export default function Setup() {
             cif: formData.cif,
             cnp: formData.cnp || null,
             vat_payer: formData.vatPayer,
+            vat_intra_community: formData.vatIntraCommunity,
             address_street: formData.address.street,
             address_city: formData.address.city,
             address_county: formData.address.county,
@@ -193,6 +195,23 @@ export default function Setup() {
                   <Label htmlFor="vat-no">Scutit de TVA</Label>
                 </div>
               </RadioGroup>
+            </div>
+            
+            <div>
+              <Label htmlFor="vatIntraCommunity" className="text-base font-medium">
+                TVA Intracomunitar <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="vatIntraCommunity"
+                value={formData.vatIntraCommunity}
+                onChange={(e) => setFormData({ ...formData, vatIntraCommunity: e.target.value })}
+                placeholder="ex: RO12345678"
+                className="mt-2"
+                required
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Obligatoriu pentru toate entitățile (PFA/SRL), indiferent de statusul TVA
+              </p>
             </div>
           </div>
         );
@@ -382,7 +401,7 @@ export default function Setup() {
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return formData.companyType !== '';
+        return formData.companyType !== '' && formData.vatIntraCommunity !== '';
       case 2:
         return formData.companyName && formData.cif;
       case 3:

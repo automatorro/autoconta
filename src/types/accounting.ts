@@ -7,6 +7,7 @@ export interface Company {
   cnp?: string;
   type: 'PFA' | 'SRL';
   vatPayer: boolean;
+  vatIntraCommunity?: string;
   address: {
     street: string;
     city: string;

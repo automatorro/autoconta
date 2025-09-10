@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Documents from "./pages/Documents";
 import Setup from "./pages/Setup";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -91,14 +92,7 @@ function AppRoutes() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="setup" element={<div>Setup & Management</div>} />
-            <Route path="documents" element={<Documents />} />
-            <Route path="reconciliation" element={<div>Reconciliere</div>} />
-            <Route path="accounting" element={<div>Contabilitate</div>} />
-            <Route path="declarations" element={<div>Declarații</div>} />
-            <Route path="tax-optimization" element={<div>Optimizare Fiscală</div>} />
-            <Route path="compliance" element={<div>Compliance</div>} />
-            <Route path="alerts" element={<div>Alerte</div>} />
-            <Route path="settings" element={<div>Setări</div>} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </>

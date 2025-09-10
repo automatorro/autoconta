@@ -32,6 +32,7 @@ export function useAuth() {
           cnp: (profile as any).cnp || '',
           type: ((profile as any).company_type as 'PFA' | 'SRL') || 'PFA',
           vatPayer: (profile as any).vat_payer || false,
+          vatIntraCommunity: (profile as any).vat_intra_community || '',
           address: {
             street: (profile as any).address_street || '',
             city: (profile as any).address_city || '',
@@ -154,10 +155,19 @@ export function useAuth() {
         
         // Handle different auth events
         if (event === 'SIGNED_OUT') {
-          console.log('👋 User signed out, clearing data');
-          // Clear any cached data when user signs out
+          console.log('👋 User signed out, clearing all data');
+          // Clear all cached data when user signs out
           setUser(null);
           setSession(null);
+          setCompany(null);
+          setUserData({
+            id: '',
+            email: '',
+            setupCompleted: false,
+            company: null,
+            vehicles: [],
+            drivers: []
+          });
         } else if (event === 'SIGNED_IN' && session?.user) {
           console.log('🚀 User signed in, loading user data...');
           // Load user data when signed in
@@ -242,8 +252,47 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      console.log('🔄 Starting sign out process...');
+      
+      // Sign out from Supabase first - this will trigger the auth state change
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('❌ Sign out error:', error);
+        // Even if there's an error, clear local state
+        setUser(null);
+        setSession(null);
+        setCompany(null);
+        setUserData({
+          id: '',
+          email: '',
+          setupCompleted: false,
+          company: null,
+          vehicles: [],
+          drivers: []
+        });
+      } else {
+        console.log('✅ Successfully signed out from Supabase');
+      }
+      
+      return { error };
+    } catch (error) {
+      console.error('❌ Error during signOut:', error);
+      // Clear local state even if there's an error
+      setUser(null);
+      setSession(null);
+      setCompany(null);
+      setUserData({
+        id: '',
+        email: '',
+        setupCompleted: false,
+        company: null,
+        vehicles: [],
+        drivers: []
+      });
+      return { error: error as any };
+    }
   };
 
   return {

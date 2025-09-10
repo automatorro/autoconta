@@ -172,6 +172,7 @@ export type Database = {
           setup_completed: boolean
           updated_at: string
           user_id: string
+          vat_intra_community: string
           vat_payer: boolean | null
         }
         Insert: {
@@ -190,6 +191,7 @@ export type Database = {
           setup_completed?: boolean
           updated_at?: string
           user_id: string
+          vat_intra_community?: string
           vat_payer?: boolean | null
         }
         Update: {
@@ -208,6 +210,7 @@ export type Database = {
           setup_completed?: boolean
           updated_at?: string
           user_id?: string
+          vat_intra_community?: string
           vat_payer?: boolean | null
         }
         Relationships: []
