@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 const modules = [
   {
     title: "Setup & Management",
-    url: "/setup",
+    url: "/settings",
     icon: Building2,
     description: "Entitate, vehicule, șoferi",
     badge: null
