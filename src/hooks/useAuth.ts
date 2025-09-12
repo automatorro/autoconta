@@ -279,12 +279,6 @@ export function useAuth() {
       console.error('💥 Google OAuth exception:', err);
       return { error: err };
     }
-    
-    if (error) {
-      console.error('❌ Google OAuth error:', error);
-    }
-    
-    return { error };
   };
 
   const signOut = async () => {
