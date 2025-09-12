@@ -300,20 +300,35 @@ export default function Setup() {
         }
         
         // Force reload of user data to reflect setup_completed status
-        console.log('🔄 Reloading page to refresh user data...');
+        console.log('🔄 Navigating to dashboard...');
         
         toast({
           title: "Succes!",
           description: "Configurarea inițială a fost completată cu succes"
         });
         
-        // Reload the page to ensure fresh data is loaded
-        window.location.href = '/dashboard';
+        // Navigate to dashboard using React Router
+        navigate('/dashboard');
       } catch (error) {
         console.error('Error saving setup data:', error);
+        
+        let errorMessage = "A apărut o eroare la salvarea datelor";
+        
+        if (error instanceof Error) {
+          if (error.message.includes('network')) {
+            errorMessage = "Problemă de conexiune. Verificați internetul și încercați din nou.";
+          } else if (error.message.includes('auth')) {
+            errorMessage = "Sesiunea a expirat. Vă rugăm să vă autentificați din nou.";
+          } else if (error.message.includes('duplicate')) {
+            errorMessage = "Datele introduse există deja în sistem.";
+          } else {
+            errorMessage = `Eroare: ${error.message}`;
+          }
+        }
+        
         toast({
-          title: "Eroare",
-          description: "A apărut o eroare la salvarea datelor. Încercați din nou.",
+          title: "Eroare la salvare",
+          description: errorMessage,
           variant: "destructive"
         });
       } finally {

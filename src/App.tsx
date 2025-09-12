@@ -27,7 +27,19 @@ function AppRoutes() {
   const hasCompany = user.company !== null;
   
   // Check if setup is completed by looking at the user profile data
-  const isSetupCompleted = hasCompany; // For now, we'll use company existence as setup completion indicator
+  // Setup is completed only if company exists AND has required data (name and CIF/CNP)
+  const isSetupCompleted = hasCompany && 
+    user.company?.name && 
+    user.company?.name.trim() !== '' && 
+    (user.company?.cif?.trim() !== '' || user.company?.cnp?.trim() !== '');
+  
+  // Debug logging to understand the current state
+  console.log('🔍 Debug App State:', {
+    authUser: !!authUser,
+    hasCompany,
+    company: user.company,
+    isSetupCompleted
+  });
   
   // Initialize auth hook
   useAuth();
