@@ -195,17 +195,8 @@ export function useAuth() {
   const signUp = async (email: string, password: string) => {
     console.log('🔄 Starting signUp process for:', email);
     
-    // Force localhost when running locally
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    let redirectUrl;
-    if (isLocalhost) {
-      redirectUrl = 'http://localhost:8080/';
-      console.log('🧪 Using localhost redirect for signup');
-    } else {
-      redirectUrl = `${window.location.origin}/`;
-      console.log('🚀 Using production redirect for signup');
-    }
+    // Use current origin for all environments
+    const redirectUrl = `${window.location.origin}/`;
     
     console.log('📧 Email redirect URL for signup:', redirectUrl);
     
@@ -243,24 +234,11 @@ export function useAuth() {
   const signInWithGoogle = async () => {
     console.log('🔄 Starting Google OAuth process');
     
-    // Force localhost when running locally
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    let redirectUrl;
-    
-    if (isLocalhost) {
-      // Force localhost redirect for local development
-      redirectUrl = 'http://localhost:8080/';
-      console.log('🧪 Running in local development environment - forcing localhost redirect');
-    } else {
-      // Use current origin for production
-      redirectUrl = `${window.location.origin}/`;
-      console.log('🚀 Running in production environment');
-    }
+    // Use current origin for all environments
+    const redirectUrl = `${window.location.origin}/`;
     
     console.log('🔗 Google OAuth redirect URL:', redirectUrl);
     console.log('🌐 Current origin:', window.location.origin);
-    console.log('🌍 Current hostname:', window.location.hostname);
     
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
