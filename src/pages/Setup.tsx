@@ -307,6 +307,9 @@ export default function Setup() {
           description: "Configurarea inițială a fost completată cu succes"
         });
         
+        // Reset loading state before navigation
+        setIsLoading(false);
+        
         // Navigate to dashboard using React Router
         navigate('/dashboard');
       } catch (error) {
