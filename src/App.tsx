@@ -115,6 +115,8 @@ function AppRoutes() {
           <Route path="*" element={<NotFound />} />
         </>
       )}
+      {/* Handle OAuth callback - this route should be accessible regardless of auth state */}
+      <Route path="/auth/callback" element={<Navigate to={isSetupCompleted ? "/dashboard" : "/setup"} replace />} />
     </Routes>
   );
 }

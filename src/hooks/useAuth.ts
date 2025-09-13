@@ -14,7 +14,7 @@ export function useAuth() {
     try {
       // Load user profile - use any to bypass TypeScript restrictions
       const { data: profile, error: profileError } = await supabase
-        .from('user_profiles' as any)
+        .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -234,8 +234,8 @@ export function useAuth() {
   const signInWithGoogle = async () => {
     console.log('🔄 Starting Google OAuth process');
     
-    // Use current origin for all environments
-    const redirectUrl = `${window.location.origin}/`;
+    // Use current origin with auth callback route
+    const redirectUrl = `${window.location.origin}/auth/callback`;
     
     console.log('🔗 Google OAuth redirect URL:', redirectUrl);
     console.log('🌐 Current origin:', window.location.origin);
