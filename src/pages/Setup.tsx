@@ -243,8 +243,9 @@ export default function Setup() {
         description: "Puteți completa datele companiei mai târziu din Setări"
       });
       
-      setIsLoading(false);
+      // Navigate first, then reset loading
       navigate('/dashboard');
+      setIsLoading(false);
     } catch (error) {
       console.error('Error skipping setup:', error);
       toast({
@@ -383,11 +384,9 @@ export default function Setup() {
           description: "Configurarea inițială a fost completată cu succes"
         });
         
-        // Reset loading state before navigation
-        setIsLoading(false);
-        
-        // Navigate to dashboard using React Router
+        // Navigate first, then reset loading
         navigate('/dashboard');
+        setIsLoading(false);
       } catch (error) {
         console.error('Error saving setup data:', error);
         

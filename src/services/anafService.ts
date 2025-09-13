@@ -58,7 +58,8 @@ export interface AnafResponse {
 }
 
 class AnafService {
-  private readonly baseUrl = 'https://webservicesp.anaf.ro/PlatitorTvaRest/api/v8/ws/tva';
+  private readonly baseUrl = '/api/anaf/tva';
+  private readonly fallbackUrl = 'https://webservicesp.anaf.ro/PlatitorTvaRest/api/v8/ws/tva';
   
   /**
    * Normalizează CIF-ul pentru a fi compatibil cu API-ul ANAF
@@ -119,14 +120,29 @@ class AnafService {
 
       console.log('🔍 ANAF API Request:', { cif: normalizedCif, date: checkDate });
 
-      const response = await fetch(this.baseUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
+      let response;
+      try {
+        // Încearcă mai întâi proxy-ul local
+        response = await fetch(this.baseUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+      } catch (proxyError) {
+        console.warn('⚠️ Proxy not available, trying direct API:', proxyError.message);
+        // Fallback la API-ul direct (va avea probleme CORS în browser)
+        response = await fetch(this.fallbackUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`ANAF API Error: ${response.status} ${response.statusText}`);
