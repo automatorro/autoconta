@@ -9,7 +9,8 @@ import {
   TrendingUp,
   Shield,
   Bell,
-  Settings
+  Settings,
+  ScrollText
 } from "lucide-react";
 
 import {
@@ -30,10 +31,17 @@ import { cn } from "@/lib/utils";
 
 const modules = [
   {
+    title: "Gestionare Business",
+    url: "/business",
+    icon: Building2,
+    description: "SRL, PFA, angajați, documente",
+    badge: null
+  },
+  {
     title: "Setup & Management",
     url: "/settings",
-    icon: Building2,
-    description: "Entitate, vehicule, șoferi",
+    icon: Settings,
+    description: "Configurări generale",
     badge: null
   },
   {
@@ -42,6 +50,13 @@ const modules = [
     icon: FileText,
     description: "OCR, upload, import CSV ",
     badge: "3"
+  },
+  {
+    title: "Documente Legislative",
+    url: "/legislative-documents",
+    icon: ScrollText,
+    description: "Autorizații, copii conforme, ecusoane",
+    badge: null
   },
   {
     title: "Reconciliere",

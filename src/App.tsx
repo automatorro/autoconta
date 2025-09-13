@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Documents from "./pages/Documents";
+import LegislativeDocuments from "./pages/LegislativeDocuments";
+import Accounting from "./pages/Accounting";
+import Business from "./pages/Business";
 import Setup from "./pages/Setup";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
@@ -105,8 +108,10 @@ function AppRoutes() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="settings" element={<Settings />} />
             <Route path="documents" element={<Documents />} />
+            <Route path="legislative-documents" element={<LegislativeDocuments />} />
+            <Route path="accounting" element={<Accounting />} />
+            <Route path="business" element={<Business />} />
             <Route path="reconciliation" element={<div className="p-6"><h1 className="text-2xl font-bold">Reconciliere</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
-            <Route path="accounting" element={<div className="p-6"><h1 className="text-2xl font-bold">Contabilitate</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
             <Route path="declarations" element={<div className="p-6"><h1 className="text-2xl font-bold">Declarații</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
             <Route path="tax-optimization" element={<div className="p-6"><h1 className="text-2xl font-bold">Optimizare Fiscală</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
             <Route path="compliance" element={<div className="p-6"><h1 className="text-2xl font-bold">Compliance</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />

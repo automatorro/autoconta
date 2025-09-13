@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { vatService } from '@/services/vatService';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -70,13 +71,41 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { processImage, isProcessing } = useOCR();
 
+  const [vatRateOptions, setVatRateOptions] = React.useState<Array<{ value: number; label: string; isActive: boolean }>>([]);
+  const [defaultVatRate, setDefaultVatRate] = React.useState<number>(19);
+
+  // Încarcă opțiunile de rate TVA la montarea componentei
+  React.useEffect(() => {
+    const loadVatRates = async () => {
+      try {
+        const options = await vatService.getVatRateOptions();
+        setVatRateOptions(options);
+        
+        const currentRate = await vatService.getCurrentVatRate();
+        setDefaultVatRate(currentRate);
+      } catch (error) {
+        console.error('Eroare la încărcarea ratelor TVA:', error);
+        // Fallback la opțiunile standard
+        setVatRateOptions([
+          { value: 0, label: '0%', isActive: true },
+          { value: 5, label: '5%', isActive: true },
+          { value: 9, label: '9%', isActive: true },
+          { value: 19, label: '19%', isActive: true },
+          { value: 20, label: '20% (din august 2025)', isActive: false }
+        ]);
+      }
+    };
+    
+    loadVatRates();
+  }, []);
+
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentSchema),
     defaultValues: {
       type: 'expense',
       date: new Date(),
       currency: 'RON',
-      vatRate: 19,
+      vatRate: defaultVatRate,
       netAmount: 0,
       vatAmount: 0,
       totalAmount: 0,
@@ -95,10 +124,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   React.useEffect(() => {
     const { netAmount, vatRate } = watchedValues;
     if (netAmount && vatRate) {
-      const vatAmount = (netAmount * vatRate) / 100;
-      const totalAmount = netAmount + vatAmount;
-      form.setValue('vatAmount', Number(vatAmount.toFixed(2)));
-      form.setValue('totalAmount', Number(totalAmount.toFixed(2)));
+      const calculation = vatService.calculateVat(netAmount, vatRate);
+      form.setValue('vatAmount', calculation.vatAmount);
+      form.setValue('totalAmount', calculation.totalAmount);
     }
   }, [watchedValues.netAmount, watchedValues.vatRate, form]);
 
@@ -443,10 +471,15 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="0">0%</SelectItem>
-                        <SelectItem value="5">5%</SelectItem>
-                        <SelectItem value="9">9%</SelectItem>
-                        <SelectItem value="19">19%</SelectItem>
+                        {vatRateOptions.map((option) => (
+                          <SelectItem 
+                            key={option.value} 
+                            value={option.value.toString()}
+                            disabled={!option.isActive}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
