@@ -59,7 +59,7 @@ export interface AnafResponse {
 
 class AnafService {
   private readonly baseUrl = '/api/anaf/tva';
-  private readonly fallbackUrl = 'https://webservicesp.anaf.ro/PlatitorTvaRest/api/v8/ws/tva';
+  private readonly fallbackUrl = 'https://webservicesp.anaf.ro/PlatitorTvaRest/api/v7/ws/tva';
   
   /**
    * Normalizează CIF-ul pentru a fi compatibil cu API-ul ANAF

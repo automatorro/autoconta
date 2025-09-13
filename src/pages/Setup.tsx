@@ -16,10 +16,9 @@ import { useToast } from "@/hooks/use-toast";
 import CifLookup from "@/components/CifLookup";
 
 const steps = [
-  { id: 1, title: "Tip Entitate", icon: Building2, description: "PFA sau SRL" },
-  { id: 2, title: "Date Firmă", icon: Building2, description: "Informații legale" },
-  { id: 3, title: "Vehicule", icon: Car, description: "Mașinile folosite" },
-  { id: 4, title: "Șoferi", icon: Users, description: "Persoanele autorizate" },
+  { id: 1, title: "Date Firmă", icon: Building2, description: "Informații legale" },
+  { id: 2, title: "Vehicule", icon: Car, description: "Mașinile folosite" },
+  { id: 3, title: "Șoferi", icon: Users, description: "Persoanele autorizate" },
 ];
 
 export default function Setup() {
@@ -427,87 +426,65 @@ export default function Setup() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-semibold mb-2">Tipul entității</h2>
-              <p className="text-muted-foreground">
-                Selectați forma juridică sub care activați
-              </p>
-            </div>
-            
-            <RadioGroup
-              value={formData.companyType}
-              onValueChange={(value) => setFormData({ ...formData, companyType: value as 'PFA' | 'SRL' })}
-              className="space-y-4"
-            >
-              <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-secondary/50">
-                <RadioGroupItem value="PFA" id="pfa" />
-                <Label htmlFor="pfa" className="flex-1 cursor-pointer">
-                  <div>
-                    <div className="font-medium">Persoană Fizică Autorizată (PFA)</div>
-                    <div className="text-sm text-muted-foreground">
-                      Regim simplu, ideal pentru activitate individuală
-                    </div>
-                  </div>
-                </Label>
-              </div>
-              
-              <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-secondary/50">
-                <RadioGroupItem value="SRL" id="srl" />
-                <Label htmlFor="srl" className="flex-1 cursor-pointer">
-                  <div>
-                    <div className="font-medium">Societate cu Răspundere Limitată (SRL)</div>
-                    <div className="text-sm text-muted-foreground">
-                      Pentru activități mai complexe, mai mulți asociați
-                    </div>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
-
-            <div>
-              <Label className="text-base font-medium">Status TVA</Label>
-              <RadioGroup
-                value={formData.vatPayer ? "yes" : "no"}
-                onValueChange={(value) => setFormData({ ...formData, vatPayer: value === "yes" })}
-                className="flex gap-6 mt-3"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="yes" id="vat-yes" />
-                  <Label htmlFor="vat-yes">Plătitor de TVA</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="no" id="vat-no" />
-                  <Label htmlFor="vat-no">Scutit de TVA</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            
-            <div>
-              <Label htmlFor="vatIntraCommunity" className="text-base font-medium">
-                TVA Intracomunitar <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="vatIntraCommunity"
-                value={formData.vatIntraCommunity}
-                onChange={(e) => setFormData({ ...formData, vatIntraCommunity: e.target.value })}
-                placeholder="ex: RO12345678"
-                className="mt-2"
-                required
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Obligatoriu pentru toate entitățile (PFA/SRL), indiferent de statusul TVA
-              </p>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
               <h2 className="text-2xl font-semibold mb-2">Date firmă</h2>
               <p className="text-muted-foreground">
                 Informațiile legale ale entității
               </p>
+            </div>
+
+            <div className="grid gap-4">
+              <div>
+                <Label className="text-base font-medium">Tipul entității</Label>
+                <RadioGroup
+                  value={formData.companyType}
+                  onValueChange={(value) => setFormData({ ...formData, companyType: value as 'PFA' | 'SRL' })}
+                  className="flex gap-6 mt-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="PFA" id="pfa" />
+                    <Label htmlFor="pfa">PFA</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="SRL" id="srl" />
+                    <Label htmlFor="srl">SRL</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div>
+                <Label className="text-base font-medium">Status TVA</Label>
+                <RadioGroup
+                  value={formData.vatPayer ? "yes" : "no"}
+                  onValueChange={(value) => setFormData({ ...formData, vatPayer: value === "yes" })}
+                  className="flex gap-6 mt-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="vat-yes" />
+                    <Label htmlFor="vat-yes">Plătitor de TVA</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="vat-no" />
+                    <Label htmlFor="vat-no">Scutit de TVA</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              <div>
+                <Label htmlFor="vatIntraCommunity" className="text-base font-medium">
+                  TVA Intracomunitar <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="vatIntraCommunity"
+                  value={formData.vatIntraCommunity}
+                  onChange={(e) => setFormData({ ...formData, vatIntraCommunity: e.target.value })}
+                  placeholder="ex: RO12345678"
+                  className="mt-2"
+                  required
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Obligatoriu pentru toate entitățile (PFA/SRL), indiferent de statusul TVA
+                </p>
+              </div>
             </div>
 
             <CifLookup
@@ -661,7 +638,7 @@ export default function Setup() {
           </div>
         );
 
-      case 3:
+      case 2:
         return (
           <div className="space-y-6">
             <div className="text-center">
@@ -778,7 +755,7 @@ export default function Setup() {
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-6">
             <div className="text-center">
@@ -913,11 +890,9 @@ export default function Setup() {
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return formData.companyType !== '' && formData.vatIntraCommunity !== '';
-      case 2:
         return formData.companyName && formData.cif;
+      case 2:
       case 3:
-      case 4:
         return true;
       default:
         return false;

@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
       '/api/anaf/tva': {
         target: 'https://webservicesp.anaf.ro',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/anaf\/tva/, '/PlatitorTvaRest/api/v8/ws/tva'),
+        rewrite: (path) => path.replace(/^\/api\/anaf\/tva/, '/PlatitorTvaRest/api/v7/ws/tva'),
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('ANAF proxy error:', err);
