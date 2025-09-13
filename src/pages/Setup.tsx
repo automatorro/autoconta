@@ -202,9 +202,10 @@ export default function Setup() {
           company_name: 'Companie Nouă',
           company_type: 'PFA',
           cif: 'COMPLETEAZĂ_ULTERIOR',
-          setup_completed: true,
-          setup_skipped: true
+          setup_completed: true
         });
+
+      console.log('📊 Skip setup - Profile save result - Error:', profileError);
 
       if (profileError) {
         console.log('❌ Profile save failed:', profileError);
