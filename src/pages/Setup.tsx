@@ -13,6 +13,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { Company, Vehicle, Driver } from "@/types/accounting";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import CifLookup from "@/components/CifLookup";
 
 const steps = [
   { id: 1, title: "Tip Entitate", icon: Building2, description: "PFA sau SRL" },
@@ -508,6 +509,40 @@ export default function Setup() {
               <p className="text-muted-foreground">
                 Informațiile legale ale entității
               </p>
+            </div>
+
+            <CifLookup
+              onCompanyFound={(companyData) => {
+                console.log('🏢 Auto-filling company data:', companyData);
+                setFormData({
+                  ...formData,
+                  companyName: companyData.name || formData.companyName,
+                  cif: companyData.cif || formData.cif,
+                  address: {
+                    street: companyData.address?.street || formData.address.street,
+                    city: companyData.address?.city || formData.address.city,
+                    county: companyData.address?.county || formData.address.county,
+                    postalCode: companyData.address?.postalCode || formData.address.postalCode
+                  },
+                  contact: {
+                    phone: companyData.contact?.phone || formData.contact.phone,
+                    email: companyData.contact?.email || formData.contact.email
+                  },
+                  vatPayer: companyData.vatPayer !== undefined ? companyData.vatPayer : formData.vatPayer
+                });
+              }}
+              initialCif={formData.cif}
+            />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  sau completați manual
+                </span>
+              </div>
             </div>
 
             <div className="grid gap-4">
