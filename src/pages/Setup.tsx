@@ -180,6 +180,80 @@ export default function Setup() {
     setDrivers(drivers.filter(d => d.id !== id));
   };
 
+  const handleSkipSetup = async () => {
+    if (!authUser) {
+      toast({
+        title: "Eroare",
+        description: "Nu sunteți autentificat",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    console.log('⏭️ Skipping setup - creating minimal company profile');
+    
+    try {
+      // Create minimal company profile to mark setup as completed
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .upsert({
+          user_id: authUser.id,
+          company_name: 'Companie Nouă',
+          company_type: 'PFA',
+          cif: 'COMPLETEAZĂ_ULTERIOR',
+          setup_completed: true,
+          setup_skipped: true
+        });
+
+      if (profileError) {
+        console.log('❌ Profile save failed:', profileError);
+      } else {
+        console.log('✅ Minimal profile saved successfully!');
+      }
+
+      // Create minimal company object for local store
+      const company: Company = {
+        id: crypto.randomUUID(),
+        name: 'Companie Nouă',
+        cif: 'COMPLETEAZĂ_ULTERIOR',
+        type: 'PFA',
+        vatPayer: false,
+        address: {
+          street: '',
+          city: '',
+          county: '',
+          postalCode: ''
+        },
+        contact: {
+          phone: '',
+          email: ''
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      console.log('🏢 Setting minimal company in local store:', company);
+      setCompany(company);
+      
+      toast({
+        title: "Setup sărit cu succes!",
+        description: "Puteți completa datele companiei mai târziu din Setări"
+      });
+      
+      setIsLoading(false);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error skipping setup:', error);
+      toast({
+        title: "Eroare",
+        description: "A apărut o eroare la salvarea datelor",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
+
   const handleNext = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
@@ -824,8 +898,11 @@ export default function Setup() {
             <Building2 className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Configurare inițială</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-2">
             Configurați-vă contul pentru a începe contabilitatea profesională
+          </p>
+          <p className="text-sm text-muted-foreground">
+            💡 Puteți sări peste această configurare și completa datele mai târziu din Setări
           </p>
         </div>
 
@@ -880,7 +957,7 @@ export default function Setup() {
         </Card>
 
         {/* Navigation */}
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between items-center mt-6">
           <Button
             variant="outline"
             onClick={handleBack}
@@ -888,13 +965,24 @@ export default function Setup() {
           >
             Înapoi
           </Button>
-          <Button
-            onClick={handleNext}
-            disabled={!isStepValid() || isLoading}
-            className="gradient-primary"
-          >
-            {isLoading ? 'Se salvează...' : (currentStep === steps.length ? 'Finalizează' : 'Continuă')}
-          </Button>
+          
+          <div className="flex gap-3">
+            <Button
+              variant="ghost"
+              onClick={handleSkipSetup}
+              disabled={isLoading}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {isLoading ? 'Se salvează...' : 'Sari peste'}
+            </Button>
+            <Button
+              onClick={handleNext}
+              disabled={!isStepValid() || isLoading}
+              className="gradient-primary"
+            >
+              {isLoading ? 'Se salvează...' : (currentStep === steps.length ? 'Finalizează' : 'Continuă')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
