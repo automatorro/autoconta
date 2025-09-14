@@ -47,14 +47,14 @@ export function AppHeader({ className }: AppHeaderProps) {
       <div className="flex items-center gap-4">
         <SidebarTrigger className="h-8 w-8" />
         
-        <div className="hidden sm:block">
+        <Link to="/" className="hidden sm:block no-underline hover:opacity-90 transition-opacity">
           <h1 className="text-lg font-semibold text-foreground">
             Dashboard Contabilitate
           </h1>
           <p className="text-sm text-muted-foreground">
             {currentMonth} • Raportare lunară
           </p>
-        </div>
+        </Link>
       </div>
 
       {/* Right side - Notifications and user menu */}
