@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Building2, Car, Users, Download, Key, Save, Plus, Edit, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,7 @@ import type { Vehicle, Driver } from "@/types/accounting";
 export default function Settings() {
   const { authUser, user, getActiveAlerts, vehicles, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver, setCompany } = useAppStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("company");
 
@@ -103,6 +105,7 @@ export default function Settings() {
           address_postal_code: companyData.address.postalCode,
           contact_phone: companyData.contact.phone,
           contact_email: companyData.contact.email,
+          setup_completed: true,
         })
         .eq('user_id', authUser.id);
 
@@ -126,6 +129,9 @@ export default function Settings() {
         title: "Succes!",
         description: "Datele companiei au fost actualizate"
       });
+      
+      // Redirect to dashboard after successful setup
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error updating company:', error);
       toast({

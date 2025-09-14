@@ -22,6 +22,8 @@ import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
 import type { ExpenseCategory } from '@/types/accounting';
 import { useOCR } from '@/hooks/useOCR';
+import { useBusinessSetup } from '@/hooks/useBusinessSetup';
+import { BusinessSetupModal } from './BusinessSetupModal';
 
 const documentSchema = z.object({
   type: z.enum(['invoice', 'receipt', 'expense']),
@@ -70,6 +72,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const { authUser, addDocument, vehicles } = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
   const { processImage, isProcessing } = useOCR();
+  const { isBusinessSetupComplete } = useBusinessSetup();
+  const [showBusinessSetupModal, setShowBusinessSetupModal] = useState(false);
 
   const [vatRateOptions, setVatRateOptions] = React.useState<Array<{ value: number; label: string; isActive: boolean }>>([]);
   const [defaultVatRate, setDefaultVatRate] = React.useState<number>(19);
@@ -155,6 +159,12 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
   const onSubmit = async (data: DocumentFormData) => {
     if (!authUser) return;
+
+    // Verifică dacă business setup-ul este completat
+    if (!isBusinessSetupComplete) {
+      setShowBusinessSetupModal(true);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -589,6 +599,11 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           </div>
         </form>
       </Form>
+      
+      <BusinessSetupModal
+        isOpen={showBusinessSetupModal}
+        onClose={() => setShowBusinessSetupModal(false)}
+      />
     </Card>
   );
 };
