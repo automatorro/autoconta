@@ -9,22 +9,43 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     proxy: {
+      // API principal - RO e-Factura (mai stabil)
+      '/api/anaf/efactura': {
+        target: 'https://webservicesp.anaf.ro',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/anaf\/efactura/, '/api/registruroefactura/v1/interogare'),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('ANAF RO e-Factura proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Sending Request to RO e-Factura:', req.method, req.url);
+            // Ensure proper headers for ANAF API
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Accept', 'application/json');
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('Received Response from RO e-Factura:', proxyRes.statusCode, req.url);
+          });
+        },
+      },
+      // API backup - TVA (în caz că primul nu funcționează)
       '/api/anaf/tva': {
         target: 'https://webservicesp.anaf.ro',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/anaf\/tva/, '/PlatitorTvaRest/api/v7/ws/tva'),
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
-            console.log('ANAF proxy error:', err);
+            console.log('ANAF TVA proxy error:', err);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
+            console.log('Sending Request to TVA (backup):', req.method, req.url);
             // Ensure proper headers for ANAF API
             proxyReq.setHeader('Content-Type', 'application/json');
             proxyReq.setHeader('Accept', 'application/json');
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+            console.log('Received Response from TVA (backup):', proxyRes.statusCode, req.url);
           });
         },
       }

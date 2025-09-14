@@ -93,17 +93,18 @@ function AppRoutes() {
     );
   }
 
-  // If authenticated, show main app
+  // If authenticated, show main app with AppLayout
   return (
     <Routes>
-      {!isSetupCompleted ? (
-        <>
-          <Route path="/setup" element={<Setup />} />
-          <Route path="*" element={<Navigate to="/setup" replace />} />
-        </>
-      ) : (
-        <>
-          <Route path="/" element={<AppLayout />}>
+      <Route path="/" element={<AppLayout />}>
+        {!isSetupCompleted ? (
+          <>
+            <Route index element={<Navigate to="/setup" replace />} />
+            <Route path="setup" element={<Setup />} />
+            <Route path="*" element={<Navigate to="/setup" replace />} />
+          </>
+        ) : (
+          <>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="settings" element={<Settings />} />
@@ -116,10 +117,12 @@ function AppRoutes() {
             <Route path="tax-optimization" element={<div className="p-6"><h1 className="text-2xl font-bold">Optimizare Fiscală</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
             <Route path="compliance" element={<div className="p-6"><h1 className="text-2xl font-bold">Compliance</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
             <Route path="alerts" element={<div className="p-6"><h1 className="text-2xl font-bold">Notificări</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </>
-      )}
+            {/* Allow access to setup even after completion for reconfiguration */}
+            <Route path="setup" element={<Setup />} />
+            <Route path="*" element={<NotFound />} />
+          </>
+        )}
+      </Route>
       {/* Handle OAuth callback - this route should be accessible regardless of auth state */}
       <Route path="/auth/callback" element={<Navigate to={isSetupCompleted ? "/dashboard" : "/setup"} replace />} />
     </Routes>

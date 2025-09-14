@@ -191,29 +191,12 @@ export default function Setup() {
     }
 
     setIsLoading(true);
-    console.log('⏭️ Skipping setup - creating minimal company profile');
     
     try {
-      // Create minimal company profile to mark setup as completed
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: authUser.id,
-          company_name: 'Companie Nouă',
-          company_type: 'PFA',
-          cif: 'COMPLETEAZĂ_ULTERIOR',
-          setup_completed: true
-        });
-
-      console.log('📊 Skip setup - Profile save result - Error:', profileError);
-
-      if (profileError) {
-        console.log('❌ Profile save failed:', profileError);
-      } else {
-        console.log('✅ Minimal profile saved successfully!');
-      }
-
-      // Create minimal company object for local store
+      // Nu salvăm nimic în Supabase când se sare peste setup
+      // Doar marcăm setup-ul ca fiind completat local pentru a permite accesul la dashboard
+      
+      // Create minimal company object for local store only
       const company: Company = {
         id: crypto.randomUUID(),
         name: 'Companie Nouă',
@@ -234,24 +217,23 @@ export default function Setup() {
         updatedAt: new Date()
       };
       
-      console.log('🏢 Setting minimal company in local store:', company);
       setCompany(company);
       
       toast({
         title: "Setup sărit cu succes!",
-        description: "Puteți completa datele companiei mai târziu din Setări"
+        description: "Puteți completa datele companiei din secțiunea Gestionare Business"
       });
       
-      // Navigate first, then reset loading
+      // Navigate to dashboard
       navigate('/dashboard');
-      setIsLoading(false);
     } catch (error) {
       console.error('Error skipping setup:', error);
       toast({
         title: "Eroare",
-        description: "A apărut o eroare la salvarea datelor",
+        description: "A apărut o eroare. Încercați din nou.",
         variant: "destructive"
       });
+    } finally {
       setIsLoading(false);
     }
   };

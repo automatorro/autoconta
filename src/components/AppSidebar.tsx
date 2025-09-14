@@ -31,17 +31,17 @@ import { cn } from "@/lib/utils";
 
 const modules = [
   {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: BarChart3,
+    description: "Prezentare generală",
+    badge: null
+  },
+  {
     title: "Gestionare Business",
     url: "/business",
     icon: Building2,
     description: "SRL, PFA, angajați, documente",
-    badge: null
-  },
-  {
-    title: "Setup & Management",
-    url: "/settings",
-    icon: Settings,
-    description: "Configurări generale",
     badge: null
   },
   {
