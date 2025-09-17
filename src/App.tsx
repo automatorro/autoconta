@@ -127,6 +127,7 @@ function AppRoutes() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="setup" element={<Setup />} />
         <Route path="business" element={<BusinessManagement />} />
         <Route path="documents" element={<Documents />} />
         <Route path="reconciliation" element={<div className="p-6"><h1 className="text-2xl font-bold">Reconciliere</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />

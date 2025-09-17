@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Moon, Sun, BellRing, Globe, Lock, LogOut, Save } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, BellRing, Globe, Lock, LogOut, Save, Car, Users, Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,12 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAppStore } from "@/store/useAppStore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Vehicle, Driver } from "@/types/accounting";
 
 export default function Settings() {
-  const { authUser, user } = useAppStore();
+  const { authUser, user, setCompany, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver } = useAppStore();
   const { toast } = useToast();
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -51,10 +56,54 @@ export default function Settings() {
     licenseExpiryDate: ''
   });
 
+  // Company form data
+  const [companyData, setCompanyData] = useState({
+    companyName: user.company?.name || '',
+    companyType: user.company?.type || 'PFA',
+    cif: user.company?.cif || '',
+    cnp: user.company?.cnp || '',
+    vatPayer: user.company?.vatPayer || false,
+    vatIntraCommunity: '',
+    address: {
+      street: user.company?.address?.street || '',
+      city: user.company?.address?.city || '',
+      county: user.company?.address?.county || '',
+      postalCode: user.company?.address?.postalCode || ''
+    },
+    contact: {
+      phone: user.company?.contact?.phone || '',
+      email: user.company?.contact?.email || ''
+    }
+  });
+
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [isVehicleDialogOpen, setIsVehicleDialogOpen] = useState(false);
   const [isDriverDialogOpen, setIsDriverDialogOpen] = useState(false);
+
+  // Update companyData when user.company changes
+  useEffect(() => {
+    if (user.company) {
+      setCompanyData({
+        companyName: user.company.name || '',
+        companyType: user.company.type || 'PFA',
+        cif: user.company.cif || '',
+        cnp: user.company.cnp || '',
+        vatPayer: user.company.vatPayer || false,
+        vatIntraCommunity: '',
+        address: {
+          street: user.company.address?.street || '',
+          city: user.company.address?.city || '',
+          county: user.company.address?.county || '',
+          postalCode: user.company.address?.postalCode || ''
+        },
+        contact: {
+          phone: user.company.contact?.phone || '',
+          email: user.company.contact?.email || ''
+        }
+      });
+    }
+  }, [user.company]);
 
   const handleSaveCompany = async () => {
     if (!authUser) return;
