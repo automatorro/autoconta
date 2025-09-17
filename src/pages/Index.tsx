@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, Calculator, FileText, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+<<<<<<< HEAD
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -34,6 +35,10 @@ export default function Index() {
     }
   }, [authUser, setUser, setSession]);
   
+=======
+
+export default function Index() {
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
       {/* Hero Section */}

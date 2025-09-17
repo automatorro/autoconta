@@ -24,7 +24,10 @@ interface AppStore extends AppState {
   addDocument: (document: Document) => void;
   updateDocument: (id: string, updates: Partial<Document>) => void;
   removeDocument: (id: string) => void;
+<<<<<<< HEAD
   setDocuments: (documents: Document[]) => void;
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   getDocumentsByCategory: (category?: string) => Document[];
   addAlert: (alert: Alert) => void;
   dismissAlert: (id: string) => void;
@@ -153,10 +156,13 @@ export const useAppStore = create<AppStore>()(
       removeDocument: (id) => set((state) => ({
         documents: state.documents.filter(doc => doc.id !== id)
       })),
+<<<<<<< HEAD
       
       setDocuments: (documents) => set(() => ({
         documents
       })),
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 
       getDocumentsByCategory: (category) => {
         const state = get();
@@ -265,7 +271,11 @@ export const useAppStore = create<AppStore>()(
       }
     }),
     {
+<<<<<<< HEAD
       name: 'autoconta-storage',
+=======
+      name: 'contauber-storage',
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       version: 1,
     }
   )

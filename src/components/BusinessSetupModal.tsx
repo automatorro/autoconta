@@ -3,12 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
+<<<<<<< HEAD
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+=======
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
+import { Button } from './ui/button';
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 import { AlertTriangle } from 'lucide-react';
 
 interface BusinessSetupModalProps {
@@ -27,6 +36,7 @@ export const BusinessSetupModal: React.FC<BusinessSetupModalProps> = ({
     navigate('/settings');
   };
 
+<<<<<<< HEAD
   const handleContinueExploring = () => {
     onClose();
   };
@@ -66,6 +76,27 @@ export const BusinessSetupModal: React.FC<BusinessSetupModalProps> = ({
             className="w-full sm:w-auto"
           >
             Completează datele firmei
+=======
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <DialogTitle>Setup Business Necesar</DialogTitle>
+          </div>
+          <DialogDescription>
+            Pentru a putea salva documente și date, trebuie să completezi mai întâi
+            configurarea business-ului în pagina de setări.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Anulează
+          </Button>
+          <Button onClick={handleGoToSettings}>
+            Mergi la Setări
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -7,13 +7,20 @@ import { Badge } from '@/components/ui/badge';
 import { DocumentUploader } from '@/components/DocumentUploader';
 import { DocumentCard } from '@/components/DocumentCard';
 import { useAppStore } from '@/store/useAppStore';
+<<<<<<< HEAD
 import { useDocuments } from '@/hooks/useDocuments';
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Documents = () => {
+<<<<<<< HEAD
   const { getDocumentsByCategory } = useAppStore();
   const { documents, refreshDocuments } = useDocuments();
+=======
+  const { documents, getDocumentsByCategory } = useAppStore();
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   const [showUpload, setShowUpload] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -165,10 +172,14 @@ const Documents = () => {
           <DialogHeader>
             <DialogTitle>Adaugă Document Nou</DialogTitle>
           </DialogHeader>
+<<<<<<< HEAD
           <DocumentUploader onUploadComplete={() => {
             setShowUpload(false);
             refreshDocuments();
           }} />
+=======
+          <DocumentUploader onUploadComplete={() => setShowUpload(false)} />
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
         </DialogContent>
       </Dialog>
     </div>

@@ -12,6 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+<<<<<<< HEAD
+=======
+import { vatService } from '@/services/vatService';
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -22,7 +26,11 @@ import { supabase } from '@/integrations/supabase/client';
 import type { ExpenseCategory } from '@/types/accounting';
 import { useOCR } from '@/hooks/useOCR';
 import { useBusinessSetup } from '@/hooks/useBusinessSetup';
+<<<<<<< HEAD
 import { BusinessSetupModal } from '@/components/BusinessSetupModal';
+=======
+import { BusinessSetupModal } from './BusinessSetupModal';
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 
 const documentSchema = z.object({
   type: z.enum(['invoice', 'receipt', 'expense']),
@@ -71,16 +79,54 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const { authUser, addDocument, vehicles } = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
   const { processImage, isProcessing } = useOCR();
+<<<<<<< HEAD
   const { isBusinessSetupComplete, isLoading: isCheckingSetup } = useBusinessSetup();
   const [showBusinessSetupModal, setShowBusinessSetupModal] = useState(false);
 
+=======
+  const { isBusinessSetupComplete } = useBusinessSetup();
+  const [showBusinessSetupModal, setShowBusinessSetupModal] = useState(false);
+
+  const [vatRateOptions, setVatRateOptions] = React.useState<Array<{ value: number; label: string; isActive: boolean }>>([]);
+  const [defaultVatRate, setDefaultVatRate] = React.useState<number>(19);
+
+  // Încarcă opțiunile de rate TVA la montarea componentei
+  React.useEffect(() => {
+    const loadVatRates = async () => {
+      try {
+        const options = await vatService.getVatRateOptions();
+        setVatRateOptions(options);
+        
+        const currentRate = await vatService.getCurrentVatRate();
+        setDefaultVatRate(currentRate);
+      } catch (error) {
+        console.error('Eroare la încărcarea ratelor TVA:', error);
+        // Fallback la opțiunile standard
+        setVatRateOptions([
+          { value: 0, label: '0%', isActive: true },
+          { value: 5, label: '5%', isActive: true },
+          { value: 9, label: '9%', isActive: true },
+          { value: 19, label: '19%', isActive: true },
+          { value: 20, label: '20% (din august 2025)', isActive: false }
+        ]);
+      }
+    };
+    
+    loadVatRates();
+  }, []);
+
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentSchema),
     defaultValues: {
       type: 'expense',
       date: new Date(),
       currency: 'RON',
+<<<<<<< HEAD
       vatRate: 19,
+=======
+      vatRate: defaultVatRate,
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       netAmount: 0,
       vatAmount: 0,
       totalAmount: 0,
@@ -99,10 +145,16 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   React.useEffect(() => {
     const { netAmount, vatRate } = watchedValues;
     if (netAmount && vatRate) {
+<<<<<<< HEAD
       const vatAmount = (netAmount * vatRate) / 100;
       const totalAmount = netAmount + vatAmount;
       form.setValue('vatAmount', Number(vatAmount.toFixed(2)));
       form.setValue('totalAmount', Number(totalAmount.toFixed(2)));
+=======
+      const calculation = vatService.calculateVat(netAmount, vatRate);
+      form.setValue('vatAmount', calculation.vatAmount);
+      form.setValue('totalAmount', calculation.totalAmount);
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     }
   }, [watchedValues.netAmount, watchedValues.vatRate, form]);
 
@@ -132,7 +184,11 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const onSubmit = async (data: DocumentFormData) => {
     if (!authUser) return;
 
+<<<<<<< HEAD
     // Check if business setup is complete before saving
+=======
+    // Verifică dacă business setup-ul este completat
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     if (!isBusinessSetupComplete) {
       setShowBusinessSetupModal(true);
       return;
@@ -453,10 +509,22 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+<<<<<<< HEAD
                         <SelectItem value="0">0%</SelectItem>
                         <SelectItem value="5">5%</SelectItem>
                         <SelectItem value="9">9%</SelectItem>
                         <SelectItem value="19">19%</SelectItem>
+=======
+                        {vatRateOptions.map((option) => (
+                          <SelectItem 
+                            key={option.value} 
+                            value={option.value.toString()}
+                            disabled={!option.isActive}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -224,4 +224,154 @@ export interface DashboardStats {
     date: Date;
     description: string;
   }>;
+<<<<<<< HEAD
 }
+=======
+}
+
+// Tipuri pentru conformitatea cu legislația română
+export interface TransportAuthorization {
+  id: string;
+  userId: string;
+  companyId: string;
+  series: string;
+  number: string;
+  issueDate: Date;
+  expiryDate: Date;
+  issuedToCompany: string;
+  status: 'active' | 'expired' | 'revoked';
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CertifiedCopy {
+  id: string;
+  userId: string;
+  companyId: string;
+  number: string;
+  issueDate: Date;
+  expiryDate: Date;
+  documentType: string;
+  issuingAuthority?: string;
+  status: 'active' | 'expired' | 'revoked';
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Badge {
+  id: string;
+  userId: string;
+  companyId: string;
+  number: string;
+  issueDate: Date;
+  expiryDate: Date;
+  platform: string;
+  badgeType: string;
+  status: 'active' | 'expired' | 'lost' | 'damaged';
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface VatRate {
+  id: string;
+  ratePercentage: number;
+  effectiveFrom: Date;
+  effectiveTo?: Date;
+  isDefault: boolean;
+  description?: string;
+  createdAt: Date;
+}
+
+// Tipuri pentru inserare în baza de date
+export interface TransportAuthorizationInsert {
+  series: string;
+  number: string;
+  issueDate: Date;
+  expiryDate: Date;
+  issuedToCompany: string;
+  status?: 'active' | 'expired' | 'revoked';
+  notes?: string;
+}
+
+export interface CertifiedCopyInsert {
+  number: string;
+  issueDate: Date;
+  expiryDate: Date;
+  documentType: string;
+  issuingAuthority?: string;
+  status?: 'active' | 'expired' | 'revoked';
+  notes?: string;
+}
+
+export interface BadgeInsert {
+  number: string;
+  issueDate: Date;
+  expiryDate: Date;
+  platform: string;
+  badgeType: string;
+  status?: 'active' | 'expired' | 'lost' | 'damaged';
+  notes?: string;
+}
+
+// Tipuri pentru actualizare
+export interface TransportAuthorizationUpdate {
+  series?: string;
+  number?: string;
+  issueDate?: Date;
+  expiryDate?: Date;
+  issuedToCompany?: string;
+  status?: 'active' | 'expired' | 'revoked';
+  notes?: string;
+}
+
+export interface CertifiedCopyUpdate {
+  number?: string;
+  issueDate?: Date;
+  expiryDate?: Date;
+  documentType?: string;
+  issuingAuthority?: string;
+  status?: 'active' | 'expired' | 'revoked';
+  notes?: string;
+}
+
+export interface BadgeUpdate {
+  number?: string;
+  issueDate?: Date;
+  expiryDate?: Date;
+  platform?: string;
+  badgeType?: string;
+  status?: 'active' | 'expired' | 'lost' | 'damaged';
+  notes?: string;
+}
+
+// Tipuri pentru platformele de transport
+export type TransportPlatform = 
+  | 'Uber'
+  | 'Bolt'
+  | 'FreeNow'
+  | 'Clever'
+  | 'Star Taxi'
+  | 'Speed Taxi'
+  | 'Altele';
+
+// Tipuri pentru tipurile de ecusoane
+export type BadgeType = 
+  | 'Șofer'
+  | 'Vehicul'
+  | 'Companie'
+  | 'Temporar'
+  | 'Permanent';
+
+// Tipuri pentru tipurile de documente pentru copii conforme
+export type DocumentType = 
+  | 'Autorizație transport'
+  | 'Certificat înmatriculare'
+  | 'Asigurare RCA'
+  | 'ITP'
+  | 'Permis conducere'
+  | 'Certificat fiscal'
+  | 'Altele';
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a

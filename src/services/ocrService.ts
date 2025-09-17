@@ -1,5 +1,9 @@
 import Tesseract from 'tesseract.js';
 import { ExpenseCategory } from '@/types/accounting';
+<<<<<<< HEAD
+=======
+import { vatService } from './vatService';
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 
 export interface OCRResult {
   supplierName: string;
@@ -43,6 +47,7 @@ class OCRService {
   }
 
   async processImage(imageFile: File): Promise<OCRResult> {
+<<<<<<< HEAD
     const worker = await this.initializeWorker();
     
     try {
@@ -59,6 +64,27 @@ class OCRService {
   }
 
   private parseRomanianReceipt(text: string): OCRResult {
+=======
+    try {
+      const { data: { text: extractedText } } = await Tesseract.recognize(
+        imageFile,
+        'ron',
+        {
+          logger: m => console.log(m)
+        }
+      );
+      
+      console.log('OCR Text extracted:', extractedText);
+      
+      return await this.parseRomanianReceipt(extractedText);
+    } catch (error) {
+      console.error('OCR Error:', error);
+      throw new Error('Failed to process image');
+    }
+  }
+
+  private async parseRomanianReceipt(text: string): Promise<OCRResult> {
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
     const result: OCRResult = {
@@ -112,7 +138,11 @@ class OCRService {
     }
 
     // Extract amounts
+<<<<<<< HEAD
     const amounts = this.extractAmounts(text);
+=======
+    const amounts = await this.extractAmounts(text);
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     Object.assign(result, amounts);
 
     // Categorize based on supplier name and text content
@@ -127,7 +157,20 @@ class OCRService {
     return result;
   }
 
+<<<<<<< HEAD
   private extractAmounts(text: string): Partial<OCRResult> {
+=======
+  private async getCurrentVatRate(): Promise<number> {
+    try {
+      return await vatService.getCurrentVatRate();
+    } catch (error) {
+      console.error('Eroare la obținerea ratei TVA curente:', error);
+      return 19; // Fallback
+    }
+  }
+
+  private async extractAmounts(text: string): Promise<Partial<OCRResult>> {
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     const amounts: Partial<OCRResult> = {};
     
     // Extract total amount (look for TOTAL, Total plata, DE PLATA)
@@ -150,11 +193,22 @@ class OCRService {
       amounts.netAmount = amounts.totalAmount - amounts.vatAmount;
     }
 
+<<<<<<< HEAD
     // If no VAT found but we have total, assume it includes VAT at 19%
     if (amounts.totalAmount && !amounts.vatAmount) {
       amounts.vatRate = 19;
       amounts.netAmount = amounts.totalAmount / 1.19;
       amounts.vatAmount = amounts.totalAmount - amounts.netAmount;
+=======
+    // If no VAT found but we have total, assume it includes VAT at current rate
+    if (amounts.totalAmount && !amounts.vatAmount) {
+      // Folosește rata TVA curentă în loc de 19% fix
+      const currentVatRate = await this.getCurrentVatRate();
+      amounts.vatRate = currentVatRate;
+      const calculation = vatService.calculateNetFromTotal(amounts.totalAmount, currentVatRate);
+      amounts.netAmount = calculation.netAmount;
+      amounts.vatAmount = calculation.vatAmount;
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     }
 
     return amounts;

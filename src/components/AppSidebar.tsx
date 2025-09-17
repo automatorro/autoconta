@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+=======
+import { NavLink, useLocation } from "react-router-dom";
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 import {
   Building2,
   FileText,
@@ -10,7 +14,11 @@ import {
   Shield,
   Bell,
   Settings,
+<<<<<<< HEAD
   LogOut
+=======
+  ScrollText
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 } from "lucide-react";
 
 import {
@@ -27,6 +35,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+<<<<<<< HEAD
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
@@ -44,6 +53,26 @@ const modules = [
   },
   {
     id: "documents",
+=======
+import { cn } from "@/lib/utils";
+
+const modules = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: BarChart3,
+    description: "Prezentare generală",
+    badge: null
+  },
+  {
+    title: "Gestionare Business",
+    url: "/business",
+    icon: Building2,
+    description: "SRL, PFA, angajați, documente",
+    badge: null
+  },
+  {
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     title: "Documente",
     url: "/documents",
     icon: FileText,
@@ -51,7 +80,17 @@ const modules = [
     badge: "3"
   },
   {
+<<<<<<< HEAD
     id: "reconciliation",
+=======
+    title: "Documente Legislative",
+    url: "/legislative-documents",
+    icon: ScrollText,
+    description: "Autorizații, copii conforme, ecusoane",
+    badge: null
+  },
+  {
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     title: "Reconciliere",
     url: "/reconciliation",
     icon: RefreshCw,
@@ -59,7 +98,10 @@ const modules = [
     badge: null
   },
   {
+<<<<<<< HEAD
     id: "accounting",
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     title: "Contabilitate",
     url: "/accounting",
     icon: Calculator,
@@ -67,7 +109,10 @@ const modules = [
     badge: null
   },
   {
+<<<<<<< HEAD
     id: "declarations",
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     title: "Declarații",
     url: "/declarations",
     icon: FileCheck,
@@ -75,7 +120,10 @@ const modules = [
     badge: "2"
   },
   {
+<<<<<<< HEAD
     id: "analytics",
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     title: "Dashboard",
     url: "/dashboard",
     icon: BarChart3,
@@ -83,7 +131,10 @@ const modules = [
     badge: null
   },
   {
+<<<<<<< HEAD
     id: "tax-optimization",
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     title: "Optimizare Fiscală",
     url: "/tax-optimization",
     icon: TrendingUp,
@@ -91,7 +142,10 @@ const modules = [
     badge: null
   },
   {
+<<<<<<< HEAD
     id: "compliance",
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     title: "Compliance",
     url: "/compliance",
     icon: Shield,
@@ -103,6 +157,7 @@ const modules = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+<<<<<<< HEAD
   const navigate = useNavigate();
   const { setUser, setSession } = useAppStore();
   const { toast } = useToast();
@@ -151,6 +206,8 @@ export function AppSidebar() {
       window.location.replace('/');
     }
   };
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
 
@@ -172,6 +229,7 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarHeader className="p-4 border-b border-sidebar-border">
+<<<<<<< HEAD
         <div 
           className="flex items-center gap-3 no-underline hover:opacity-90 transition-opacity cursor-pointer block w-full"
           style={{ pointerEvents: 'auto' }}
@@ -188,6 +246,9 @@ export function AppSidebar() {
             }
           }}
         >
+=======
+        <div className="flex items-center gap-3">
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
           <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
             <Calculator className="w-4 h-4 text-white" />
           </div>
@@ -200,8 +261,13 @@ export function AppSidebar() {
                 Contabilitate online
               </p>
             </div>
+<<<<<<< HEAD
            )}
          </div>
+=======
+          )}
+        </div>
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       </SidebarHeader>
 
       <SidebarContent className="p-2">
@@ -216,7 +282,11 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {modules.map((module) => (
+<<<<<<< HEAD
                 <SidebarMenuItem key={module.id}>
+=======
+                <SidebarMenuItem key={module.title}>
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
                   <SidebarMenuButton 
                     asChild 
                     tooltip={isCollapsed ? module.title : undefined}
@@ -265,7 +335,11 @@ export function AppSidebar() {
           
           <SidebarGroupContent>
             <SidebarMenu>
+<<<<<<< HEAD
               <SidebarMenuItem key="alerts-notifications">
+=======
+              <SidebarMenuItem>
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
                 <SidebarMenuButton 
                   asChild
                   tooltip={isCollapsed ? "Notificări urgente" : undefined}
@@ -301,7 +375,11 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <SidebarMenu>
+<<<<<<< HEAD
           <SidebarMenuItem key="footer-settings">
+=======
+          <SidebarMenuItem>
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
             <SidebarMenuButton 
               asChild
               tooltip={isCollapsed ? "Setări" : undefined}
@@ -317,6 +395,7 @@ export function AppSidebar() {
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
+<<<<<<< HEAD
           
           <SidebarMenuItem key="footer-logout">
             <SidebarMenuButton 
@@ -330,6 +409,8 @@ export function AppSidebar() {
               )}
             </SidebarMenuButton>
           </SidebarMenuItem>
+=======
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
         </SidebarMenu>
         
         {!isCollapsed && (

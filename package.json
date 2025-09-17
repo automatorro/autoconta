@@ -45,12 +45,23 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+<<<<<<< HEAD
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+=======
+    "cors": "^2.8.5",
+    "date-fns": "^3.6.0",
+    "embla-carousel-react": "^8.6.0",
+    "express": "^5.1.0",
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     "file-saver": "^2.0.5",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+<<<<<<< HEAD
+=======
+    "node-fetch": "^3.3.2",
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",

@@ -54,18 +54,35 @@ export default function Auth() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+<<<<<<< HEAD
     if (!signupData.email || !signupData.password || !signupData.confirmPassword) {
       toast.error('Vă rugăm să completați toate câmpurile');
+=======
+    setIsLoading(true);
+
+    console.log('🚀 Starting signup process from Auth component');
+
+    // Validare câmpuri
+    if (!signupData.email || !signupData.password || !signupData.confirmPassword) {
+      toast.error('Toate câmpurile sunt obligatorii');
+      setIsLoading(false);
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       return;
     }
 
     if (signupData.password !== signupData.confirmPassword) {
+<<<<<<< HEAD
       toast.error('Parolele nu coincid');
+=======
+      toast.error('Parolele nu se potrivesc');
+      setIsLoading(false);
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       return;
     }
 
     if (signupData.password.length < 6) {
       toast.error('Parola trebuie să aibă cel puțin 6 caractere');
+<<<<<<< HEAD
       return;
     }
 
@@ -86,6 +103,33 @@ export default function Auth() {
     } finally {
       setIsLoading(false);
     }
+=======
+      setIsLoading(false);
+      return;
+    }
+
+    console.log('✅ Validation passed, calling signUp function');
+    const result = await signUp(signupData.email, signupData.password);
+    console.log('📊 SignUp result in Auth component:', result);
+
+    if (result?.error) {
+      console.error('❌ SignUp error:', result.error);
+      if (result.error.message?.includes('User already registered')) {
+        toast.error('Utilizatorul este deja înregistrat');
+      } else {
+        toast.error(result.error.message || 'Eroare la înregistrare');
+      }
+    } else if (result?.data) {
+      console.log('✅ SignUp successful:', result.data);
+      toast.success('Verifică-ți emailul pentru confirmarea contului');
+      setSignupData({ email: '', password: '', confirmPassword: '' });
+    } else {
+      console.warn('⚠️ Unexpected signUp result:', result);
+      toast.error('Eroare neașteptată la înregistrare');
+    }
+
+    setIsLoading(false);
+>>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   };
 
   const handleGoogleAuth = async () => {
