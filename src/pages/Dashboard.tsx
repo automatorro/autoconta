@@ -44,21 +44,12 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             {[
-<<<<<<< HEAD
               { id: "doc1", type: "Combustibil", amount: "245 RON", date: "Azi, 14:30", status: "procesat" },
               { id: "doc2", type: "Service auto", amount: "890 RON", date: "Ieri, 09:15", status: "verificare" },
               { id: "doc3", type: "Asigurare RCA", amount: "1,200 RON", date: "2 zile", status: "procesat" },
               { id: "doc4", type: "Spălătorie", amount: "35 RON", date: "3 zile", status: "procesat" }
             ].map((doc) => (
               <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border">
-=======
-              { type: "Combustibil", amount: "245 RON", date: "Azi, 14:30", status: "procesat" },
-              { type: "Service auto", amount: "890 RON", date: "Ieri, 09:15", status: "verificare" },
-              { type: "Asigurare RCA", amount: "1,200 RON", date: "2 zile", status: "procesat" },
-              { type: "Spălătorie", amount: "35 RON", date: "3 zile", status: "procesat" }
-            ].map((doc, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
                 <div>
                   <p className="font-medium">{doc.type}</p>
                   <p className="text-sm text-muted-foreground">{doc.date}</p>

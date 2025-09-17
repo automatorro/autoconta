@@ -1,9 +1,5 @@
 import { Bell, User, ChevronDown, AlertTriangle, Settings, LogOut } from "lucide-react";
-<<<<<<< HEAD
 import { Link, useNavigate } from "react-router-dom";
-=======
-import { Link } from "react-router-dom";
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,30 +13,19 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
-<<<<<<< HEAD
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-=======
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 
 interface AppHeaderProps {
   className?: string;
 }
 
 export function AppHeader({ className }: AppHeaderProps) {
-<<<<<<< HEAD
   const { authUser, user, getActiveAlerts, setUser, setSession, setCompany } = useAppStore();
-=======
-  const { authUser, user, getActiveAlerts } = useAppStore();
-  const { signOut } = useAuth();
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   const alerts = getActiveAlerts();
   const alertsCount = alerts.length;
   const userName = authUser?.email || user.company?.name || "Utilizator";
   const currentMonth = "Noiembrie 2024";
-<<<<<<< HEAD
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -88,15 +73,6 @@ export function AppHeader({ className }: AppHeaderProps) {
       
       // Force redirect anyway
       window.location.replace('/');
-=======
-
-  const handleLogout = async () => {
-    const { error } = await signOut();
-    if (error) {
-      toast.error('Eroare la deconectare');
-    } else {
-      toast.success('V-ați deconectat cu succes');
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
     }
   };
   
@@ -110,7 +86,6 @@ export function AppHeader({ className }: AppHeaderProps) {
       <div className="flex items-center gap-4">
         <SidebarTrigger className="h-8 w-8" />
         
-<<<<<<< HEAD
         <div
           role="link"
           tabIndex={0}
@@ -123,20 +98,13 @@ export function AppHeader({ className }: AppHeaderProps) {
           }}
           className="no-underline hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/50 rounded-sm"
         >
-=======
-        <Link to="/" className="hidden sm:block no-underline hover:opacity-90 transition-opacity">
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
           <h1 className="text-lg font-semibold text-foreground">
             Dashboard Contabilitate
           </h1>
           <p className="text-sm text-muted-foreground">
             {currentMonth} • Raportare lunară
           </p>
-<<<<<<< HEAD
         </div>
-=======
-        </Link>
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       </div>
 
       {/* Right side - Notifications and user menu */}

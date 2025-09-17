@@ -6,11 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-<<<<<<< HEAD
 import { anafService, AnafTVAData } from "@/services/anafService";
-=======
-import { anafService, AnafCompanyData } from "@/services/anafService";
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 
 interface CifLookupProps {
   onCompanyFound: (companyData: any) => void;
@@ -21,11 +17,7 @@ interface CifLookupProps {
 export default function CifLookup({ onCompanyFound, initialCif = "", disabled = false }: CifLookupProps) {
   const [cif, setCif] = useState(initialCif);
   const [isLoading, setIsLoading] = useState(false);
-<<<<<<< HEAD
   const [companyData, setCompanyData] = useState<AnafTVAData | null>(null);
-=======
-  const [companyData, setCompanyData] = useState<AnafCompanyData | null>(null);
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 

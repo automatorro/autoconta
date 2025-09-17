@@ -14,11 +14,7 @@ export function useAuth() {
     try {
       // Load user profile - use any to bypass TypeScript restrictions
       const { data: profile, error: profileError } = await supabase
-<<<<<<< HEAD
         .from('user_profiles' as any)
-=======
-        .from('user_profiles')
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -197,7 +193,6 @@ export function useAuth() {
   }, [setUser, setSession, loadUserData]);
 
   const signUp = async (email: string, password: string) => {
-<<<<<<< HEAD
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -208,36 +203,6 @@ export function useAuth() {
       }
     });
     return { error };
-=======
-    console.log('🔄 Starting signUp process for:', email);
-    
-    // Use current origin for all environments
-    const redirectUrl = `${window.location.origin}/`;
-    
-    console.log('📧 Email redirect URL for signup:', redirectUrl);
-    
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
-      });
-      
-      console.log('📊 SignUp result - Data:', data);
-      console.log('❌ SignUp result - Error:', error);
-      
-      if (data?.user && !error) {
-        console.log('✅ User created successfully:', data.user.id);
-      }
-      
-      return { data, error };
-    } catch (err) {
-      console.error('💥 SignUp exception:', err);
-      return { error: err };
-    }
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   };
 
   const signIn = async (email: string, password: string) => {
@@ -249,7 +214,6 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
-<<<<<<< HEAD
     // Use proper redirect URLs based on environment
     const isProduction = window.location.hostname === 'autoconta.lovable.app' || window.location.hostname.includes('.lovable.app');
     const isLocalhost = window.location.hostname === 'localhost';
@@ -285,77 +249,23 @@ export function useAuth() {
     }
     
     return { error };
-=======
-    console.log('🔄 Starting Google OAuth process');
-    
-    // Use current origin with auth callback route
-    const redirectUrl = `${window.location.origin}/auth/callback`;
-    
-    console.log('🔗 Google OAuth redirect URL:', redirectUrl);
-    console.log('🌐 Current origin:', window.location.origin);
-    
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: false
-        }
-      });
-      
-      console.log('📊 Google OAuth result - Data:', data);
-      console.log('❌ Google OAuth result - Error:', error);
-      
-      return { data, error };
-    } catch (err) {
-      console.error('💥 Google OAuth exception:', err);
-      return { error: err };
-    }
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   };
 
   const signOut = async () => {
     try {
       console.log('🔄 Starting sign out process...');
       
-<<<<<<< HEAD
       // Apelăm signOut de la Supabase mai întâi
-=======
-      // Sign out from Supabase first - this will trigger the auth state change
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('❌ Sign out error:', error);
-<<<<<<< HEAD
         return { error };
       }
       
       console.log('✅ Successfully signed out from Supabase');
       
       // Forțăm curățarea stării locale după apelul signOut
-=======
-        // Even if there's an error, clear local state
-        setUser(null);
-        setSession(null);
-        setCompany(null);
-        setUserData({
-          id: '',
-          email: '',
-          setupCompleted: false,
-          company: null,
-          vehicles: [],
-          drivers: []
-        });
-      } else {
-        console.log('✅ Successfully signed out from Supabase');
-      }
-      
-      return { error };
-    } catch (error) {
-      console.error('❌ Error during signOut:', error);
-      // Clear local state even if there's an error
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       setUser(null);
       setSession(null);
       setCompany(null);
@@ -367,7 +277,6 @@ export function useAuth() {
         vehicles: [],
         drivers: []
       });
-<<<<<<< HEAD
       
       // Curățăm complet localStorage pentru a elimina orice sesiune persistentă
       // Curățăm starea persistentă din Zustand
@@ -388,8 +297,6 @@ export function useAuth() {
       return { error: null };
     } catch (error) {
       console.error('❌ Error during signOut:', error);
-=======
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       return { error: error as any };
     }
   };

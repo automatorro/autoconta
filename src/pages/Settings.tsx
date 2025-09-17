@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings as SettingsIcon, Moon, Sun, BellRing, Globe, Lock, LogOut, Save, Car, Users, Plus, Edit, Trash2 } from "lucide-react";
@@ -33,66 +32,6 @@ export default function Settings() {
     language: "ro",
     autoSave: true,
     twoFactorAuth: false,
-=======
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Building2, Car, Users, Download, Key, Save, Plus, Edit, Trash2, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { useAppStore } from "@/store/useAppStore";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import type { Vehicle, Driver } from "@/types/accounting";
-
-export default function Settings() {
-  const { authUser, user, getActiveAlerts, vehicles, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver, setCompany } = useAppStore();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("company");
-
-  // Company form data
-  const [companyData, setCompanyData] = useState({
-    companyName: user.company?.name || '',
-    companyType: user.company?.type || 'PFA',
-    cif: user.company?.cif || '',
-    cnp: user.company?.cnp || '',
-    vatPayer: user.company?.vatPayer || false,
-    vatIntraCommunity: '', // Will be loaded from API
-    address: {
-      street: user.company?.address?.street || '',
-      city: user.company?.address?.city || '',
-      county: user.company?.address?.county || '',
-      postalCode: user.company?.address?.postalCode || ''
-    },
-    contact: {
-      phone: user.company?.contact?.phone || '',
-      email: user.company?.contact?.email || ''
-    }
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   });
 
   // Vehicle form data
@@ -117,7 +56,6 @@ export default function Settings() {
     licenseExpiryDate: ''
   });
 
-<<<<<<< HEAD
   // Company form data
   const [companyData, setCompanyData] = useState({
     companyName: user.company?.name || '',
@@ -138,14 +76,11 @@ export default function Settings() {
     }
   });
 
-=======
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [isVehicleDialogOpen, setIsVehicleDialogOpen] = useState(false);
   const [isDriverDialogOpen, setIsDriverDialogOpen] = useState(false);
 
-<<<<<<< HEAD
   // Update companyData when user.company changes
   useEffect(() => {
     if (user.company) {
@@ -170,8 +105,6 @@ export default function Settings() {
     }
   }, [user.company]);
 
-=======
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
   const handleSaveCompany = async () => {
     if (!authUser) return;
     
@@ -217,11 +150,7 @@ export default function Settings() {
         description: "Datele companiei au fost actualizate"
       });
       
-<<<<<<< HEAD
       // Redirect to dashboard after successful save
-=======
-      // Redirect to dashboard after successful setup
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
       navigate('/dashboard');
     } catch (error) {
       console.error('Error updating company:', error);
@@ -512,7 +441,6 @@ export default function Settings() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-<<<<<<< HEAD
           <h1 className="text-2xl font-bold">Setări Aplicație</h1>
           <p className="text-muted-foreground">
             Personalizați experiența și securitatea aplicației
@@ -523,29 +451,15 @@ export default function Settings() {
             title: "Succes!",
             description: "Setările au fost salvate"
           })}
-=======
-          <h1 className="text-2xl font-bold">Setări și Management</h1>
-          <p className="text-muted-foreground">
-            Gestionați datele companiei, vehiculele și șoferii
-          </p>
-        </div>
-        <Button 
-          onClick={handleSaveCompany}
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
           disabled={isLoading}
           className="gradient-primary"
         >
           <Save className="h-4 w-4 mr-2" />
-<<<<<<< HEAD
           Salvează setările
-=======
-          Salvează modificările
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
         </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-<<<<<<< HEAD
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
@@ -558,12 +472,6 @@ export default function Settings() {
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Lock className="h-4 w-4" />
             Securitate
-=======
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="company" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Date firmă
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
           </TabsTrigger>
           <TabsTrigger value="vehicles" className="flex items-center gap-2">
             <Car className="h-4 w-4" />
@@ -573,7 +481,6 @@ export default function Settings() {
             <Users className="h-4 w-4" />
             Șoferi
           </TabsTrigger>
-<<<<<<< HEAD
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
@@ -628,47 +535,6 @@ export default function Settings() {
                   onCheckedChange={(checked) => setSettingsForm({ ...settingsForm, autoSave: checked })}
                 />
               </div>
-=======
-          <TabsTrigger value="backup" className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Backup & Export
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="company" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informații entitate</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="companyName">Denumirea companiei</Label>
-                  <Input
-                    id="companyName"
-                    value={companyData.companyName}
-                    onChange={(e) => setCompanyData({ ...companyData, companyName: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Tip entitate</Label>
-                  <RadioGroup
-                    value={companyData.companyType}
-                    onValueChange={(value) => setCompanyData({ ...companyData, companyType: value as 'PFA' | 'SRL' })}
-                    className="flex gap-6 mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="PFA" id="pfa" />
-                      <Label htmlFor="pfa">PFA</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="SRL" id="srl" />
-                      <Label htmlFor="srl">SRL</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </div>
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
@@ -798,7 +664,6 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-<<<<<<< HEAD
         <TabsContent value="appearance" className="mt-6">
           <Card>
             <CardHeader>
@@ -871,8 +736,6 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-=======
->>>>>>> a89382dac9c985abfc81276cff3029fd57d4938a
         <TabsContent value="vehicles" className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
