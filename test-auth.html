@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Autentificare Supabase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .warning {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+        .success {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .log-example {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Ghid de Testare Autentificare Supabase</h1>
+        
+        <div class="step">
+            <h3>📋 Pasul 1: Pregătire pentru Testare</h3>
+            <p>Înainte de a începe testarea, asigură-te că:</p>
+            <ul>
+                <li>Serverul rulează pe <code>http://localhost:8080</code></li>
+                <li>Consola browser-ului este deschisă (F12)</li>
+                <li>Ești pe pagina de autentificare</li>
+            </ul>
+            <a href="http://localhost:8080/auth" class="button" target="_blank">Deschide Pagina de Autentificare</a>
+        </div>
+
+        <div class="step warning">
+            <h3>⚠️ Pasul 2: Verificare Log-uri Inițiale</h3>
+            <p>În consola browser-ului, ar trebui să vezi log-uri similare cu:</p>
+            <div class="log-example">
+🔍 Checking existing session: null<br>
+🔄 Loading user data for userId: [user-id]<br>
+❌ Table access error: {message: TypeError: Failed to fetch...}
+            </div>
+            <p><strong>Nota:</strong> Eroarea "Failed to fetch" indică problema cu configurația Supabase.</p>
+        </div>
+
+        <div class="step">
+            <h3>🧪 Pasul 3: Testare Autentificare Email</h3>
+            <p>Pentru a testa autentificarea cu email:</p>
+            <ol>
+                <li>Introdu un email valid în formularul de login</li>
+                <li>Introdu o parolă</li>
+                <li>Apasă "Autentificare"</li>
+                <li>Urmărește log-urile în consolă</li>
+            </ol>
+            
+            <h4>Log-uri Așteptate pentru Succes:</h4>
+            <div class="log-example">
+🔐 Starting email/password sign in for: test@example.com<br>
+🔐 Sign in result - Data: {...} Error: null<br>
+✅ Sign in successful<br>
+🔐 Auth state change: SIGNED_IN User: test@example.com
+            </div>
+
+            <h4>Log-uri Așteptate pentru Eroare:</h4>
+            <div class="log-example">
+🔐 Starting email/password sign in for: test@example.com<br>
+❌ Sign in failed: Invalid login credentials Status: 400<br>
+🔐 Sign in result - Error: {...}
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🔗 Pasul 4: Testare Autentificare Google</h3>
+            <p>Pentru a testa autentificarea cu Google:</p>
+            <ol>
+                <li>Apasă butonul "Continuă cu Google"</li>
+                <li>Urmărește log-urile în consolă ÎNAINTE de redirect</li>
+            </ol>
+            
+            <h4>Log-uri Așteptate:</h4>
+            <div class="log-example">
+🔗 Google OAuth redirect URL: http://localhost:8080/<br>
+🌐 Current origin: http://localhost:8080<br>
+🌐 Environment detection - isProduction: false isLocalhost: true<br>
+🧪 Running in local development environment on port 8080<br>
+🔗 Starting Google OAuth with redirectTo: http://localhost:8080/<br>
+✅ Google OAuth initiated successfully, redirecting...
+            </div>
+
+            <h4>Erori Comune:</h4>
+            <div class="log-example error">
+❌ Google OAuth error: Invalid redirect URL Status: 400<br>
+❌ Full error object: {...}
+            </div>
+        </div>
+
+        <div class="step error">
+            <h3>🚨 Pasul 5: Identificare Probleme</h3>
+            
+            <h4>Problemă: "Invalid redirect URL"</h4>
+            <p><strong>Cauza:</strong> URL-urile de redirect nu sunt configurate corect în Supabase Dashboard</p>
+            <p><strong>Soluția:</strong> Adaugă <code>http://localhost:8080/</code> în Redirect URLs</p>
+
+            <h4>Problemă: "OAuth provider not configured"</h4>
+            <p><strong>Cauza:</strong> Google OAuth nu este configurat în Supabase</p>
+            <p><strong>Soluția:</strong> Configurează Google OAuth în Supabase Dashboard</p>
+
+            <h4>Problemă: "Failed to fetch"</h4>
+            <p><strong>Cauza:</strong> Probleme de conectivitate sau configurație incorectă</p>
+            <p><strong>Soluția:</strong> Verifică URL-ul Supabase și cheile API</p>
+        </div>
+
+        <div class="step success">
+            <h3>✅ Pasul 6: Verificare Configurații</h3>
+            <p>Dacă întâmpini probleme, verifică configurațiile în:</p>
+            
+            <h4>Supabase Dashboard:</h4>
+            <ul>
+                <li><strong>Site URL:</strong> <code>http://localhost:8080</code></li>
+                <li><strong>Redirect URLs:</strong> <code>http://localhost:8080/</code></li>
+            </ul>
+
+            <h4>Google Cloud Console:</h4>
+            <ul>
+                <li><strong>JavaScript Origins:</strong> <code>http://localhost:8080</code></li>
+                <li><strong>Redirect URIs:</strong> <code>https://ytjdvoyyiapkyzjrjllp.supabase.co/auth/v1/callback</code></li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>🧹 Pasul 7: Curățare Cache</h3>
+            <p>Dacă problemele persistă, încearcă:</p>
+            <ol>
+                <li>Deschide Developer Tools (F12)</li>
+                <li>Mergi la <strong>Application > Storage</strong></li>
+                <li>Șterge toate datele pentru <code>localhost:8080</code></li>
+                <li>Reîncarcă pagina (Ctrl+F5)</li>
+                <li>Testează în modul incognito</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>📞 Suport</h3>
+            <p>Pentru suport suplimentar, consultă:</p>
+            <ul>
+                <li><a href="./SUPABASE_AUTH_CONFIG.md" target="_blank">Ghidul Complet de Configurare</a></li>
+                <li><a href="https://supabase.com/docs/guides/auth" target="_blank">Documentația Supabase Auth</a></li>
+                <li>Log-urile din consola browser-ului pentru detalii specifice</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Afișează informații despre mediul curent
+        console.log('🌐 Test Environment Info:');
+        console.log('Current URL:', window.location.href);
+        console.log('Hostname:', window.location.hostname);
+        console.log('Port:', window.location.port);
+        console.log('Origin:', window.location.origin);
+        console.log('Is localhost:', window.location.hostname === 'localhost');
+        console.log('Expected Supabase redirect:', 'http://localhost:8080/');
+    </script>
+</body>
+</html>

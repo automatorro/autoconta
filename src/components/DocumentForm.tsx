@@ -105,27 +105,142 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
       form.setValue('totalAmount', Number(totalAmount.toFixed(2)));
     }
   }, [watchedValues.netAmount, watchedValues.vatRate, form]);
+  
+  // Validare date OCR
+  const validateOcrData = (ocrData: any) => {
+    const validationResults = {
+      isValid: true,
+      warnings: [] as string[],
+      errors: [] as string[]
+    };
+    
+    // Validare CIF furnizor
+    if (ocrData.supplier?.cui) {
+      const cifRegex = /^RO?[0-9]{6,10}$/i;
+      if (!cifRegex.test(ocrData.supplier.cui)) {
+        validationResults.warnings.push(`CIF-ul furnizorului (${ocrData.supplier.cui}) pare invalid.`);
+        validationResults.isValid = false;
+      }
+    }
+    
+    // Validare număr document
+    if (ocrData.documentNumber) {
+      const invoiceRegex = /^[A-Z0-9]{2,}-?[0-9]{1,}$/i;
+      if (!invoiceRegex.test(ocrData.documentNumber)) {
+        validationResults.warnings.push(`Numărul documentului (${ocrData.documentNumber}) pare invalid.`);
+      }
+    }
+    
+    // Validare sumă totală
+    if (ocrData.total) {
+      if (ocrData.total <= 0) {
+        validationResults.errors.push('Suma totală trebuie să fie pozitivă.');
+        validationResults.isValid = false;
+      }
+    }
+    
+    // Validare dată
+    if (ocrData.date) {
+      const docDate = new Date(ocrData.date);
+      const now = new Date();
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(now.getFullYear() - 1);
+      
+      if (docDate > now) {
+        validationResults.errors.push('Data documentului nu poate fi în viitor.');
+        validationResults.isValid = false;
+      } else if (docDate < oneYearAgo) {
+        validationResults.warnings.push('Documentul este mai vechi de un an.');
+      }
+    }
+    
+    return validationResults;
+  };
+  
+  // Procesare și validare date OCR
+  const processOcrData = (ocrData: any) => {
+    // Validăm datele extrase
+    const validation = validateOcrData(ocrData);
+    
+    // Afișăm avertismente și erori
+    if (validation.warnings.length > 0) {
+      toast({
+        title: 'Avertismente la validarea datelor',
+        description: validation.warnings.join('\n'),
+        variant: 'warning'
+      });
+    }
+    
+    if (validation.errors.length > 0) {
+      toast({
+        title: 'Erori la validarea datelor',
+        description: validation.errors.join('\n'),
+        variant: 'destructive'
+      });
+      return false;
+    }
+    
+    // Completăm formularul cu datele validate
+    if (ocrData.supplier?.name) form.setValue('supplierName', ocrData.supplier.name);
+    if (ocrData.supplier?.cui) form.setValue('supplierCif', ocrData.supplier.cui);
+    if (ocrData.documentNumber) form.setValue('documentNumber', ocrData.documentNumber);
+    if (ocrData.date) form.setValue('date', new Date(ocrData.date));
+    if (ocrData.total) form.setValue('totalAmount', parseFloat(ocrData.total));
+    if (ocrData.vat) form.setValue('vatAmount', parseFloat(ocrData.vat));
+    if (ocrData.category) form.setValue('category', ocrData.category);
+    
+    // Calculăm suma netă din total și TVA
+    if (ocrData.total && ocrData.vat) {
+      const netAmount = parseFloat(ocrData.total) - parseFloat(ocrData.vat);
+      form.setValue('netAmount', parseFloat(netAmount.toFixed(2)));
+      
+      // Calculăm cota de TVA
+      if (netAmount > 0) {
+        const vatRate = (parseFloat(ocrData.vat) / netAmount) * 100;
+        form.setValue('vatRate', parseFloat(vatRate.toFixed(0)));
+      }
+    }
+    
+    return validation.isValid;
+  };
 
   const handleOcrExtraction = async () => {
     try {
+      setIsLoading(true);
       const result = await processImage(file);
       
       if (result) {
-        // Map OCR result to form fields
-        if (result.supplierName) form.setValue('supplierName', result.supplierName);
-        if (result.supplierCif) form.setValue('supplierCif', result.supplierCif);
-        if (result.documentNumber) form.setValue('documentNumber', result.documentNumber);
-        if (result.totalAmount) form.setValue('totalAmount', result.totalAmount);
-        if (result.netAmount) form.setValue('netAmount', result.netAmount);
-        if (result.vatAmount) form.setValue('vatAmount', result.vatAmount);
-        if (result.vatRate) form.setValue('vatRate', result.vatRate);
-        if (result.category) form.setValue('category', result.category);
-        if (result.description) form.setValue('description', result.description);
-        if (result.date) form.setValue('date', new Date(result.date));
+        // Procesăm și validăm datele extrase
+        const isValid = processOcrData(result);
+        
+        if (isValid) {
+          toast({
+            title: 'Extragere reușită',
+            description: 'Datele au fost extrase și validate cu succes.'
+          });
+        } else {
+          toast({
+            title: 'Extragere parțială',
+            description: 'Datele au fost extrase, dar există erori de validare. Verificați și corectați manual.',
+            variant: 'warning'
+          });
+        }
+      } else {
+        toast({
+          title: 'Extragere eșuată',
+          description: 'Nu s-au putut extrage date din document. Completați manual.',
+          variant: 'warning'
+        });
       }
     } catch (error) {
-      // Error handling is done in the useOCR hook
       console.error('OCR processing failed:', error);
+      toast({
+        title: 'Eroare la extragerea datelor',
+        description: error.message || 'A apărut o eroare la procesarea documentului.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 

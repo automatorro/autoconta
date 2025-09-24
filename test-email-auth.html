@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Autentificare Email - AutoConta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test Autentificare Email - AutoConta</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Informații Test</h3>
+            <p><strong>Email de test:</strong> lucian.cebuc@gmail.com</p>
+            <p><strong>Scop:</strong> Diagnosticarea problemei 404 la autentificarea cu email</p>
+            <p><strong>Data/Ora:</strong> <span id="timestamp"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test Autentificare Email</h3>
+            <form id="loginForm">
+                <label>Email:</label>
+                <input type="email" id="email" value="lucian.cebuc@gmail.com" required>
+                
+                <label>Parolă:</label>
+                <input type="password" id="password" placeholder="Introduceți parola" required>
+                
+                <button type="submit">🔐 Testează Autentificare</button>
+            </form>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Teste de Diagnosticare</h3>
+            <button onclick="testSupabaseConnection()">🔗 Test Conexiune Supabase</button>
+            <button onclick="testAuthConfig()">⚙️ Test Configurație Auth</button>
+            <button onclick="checkUserExists()">👤 Verifică Utilizator în DB</button>
+            <button onclick="clearLogs()">🧹 Curăță Log-uri</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Log-uri și Rezultate</h3>
+            <div id="logs" class="log-area">Așteptând teste...\n</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+
+        // Configurație Supabase
+        const supabaseUrl = 'https://ytjdvoyyiapkyzjrjllp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0amR2b3l5aWFwa3l6anJqbGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzYxNDUsImV4cCI6MjA3Mjc1MjE0NX0._Er5RxJmtzYMpXMU15Pi9M-xSjJwk1gORqrZwR8nf2g';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Funcții de logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logArea = document.getElementById('logs');
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logArea.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(`${prefix} ${message}`);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').textContent = 'Log-uri curățate...\n';
+        }
+
+        // Test conexiune Supabase
+        window.testSupabaseConnection = async function() {
+            log('🔗 Testez conexiunea la Supabase...');
+            try {
+                const { data, error } = await supabase.from('user_profiles').select('id').limit(1);
+                if (error) {
+                    log(`❌ Eroare conexiune Supabase: ${error.message}`, 'error');
+                    log(`Detalii eroare: ${JSON.stringify(error)}`, 'error');
+                } else {
+                    log('✅ Conexiunea la Supabase funcționează!', 'success');
+                }
+            } catch (err) {
+                log(`❌ Eroare neașteptată: ${err.message}`, 'error');
+            }
+        };
+
+        // Test configurație auth
+        window.testAuthConfig = async function() {
+            log('⚙️ Testez configurația de autentificare...');
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                log(`Sesiune curentă: ${session ? 'Activă' : 'Inactivă'}`);
+                
+                if (session) {
+                    log(`Utilizator autentificat: ${session.user.email}`);
+                    log(`ID utilizator: ${session.user.id}`);
+                } else {
+                    log('Nu există sesiune activă');
+                }
+
+                // Test URL-uri de redirect
+                const currentUrl = window.location.origin;
+                log(`URL curent: ${currentUrl}`);
+                log(`Hostname: ${window.location.hostname}`);
+                log(`Port: ${window.location.port}`);
+                
+            } catch (err) {
+                log(`❌ Eroare la testarea configurației: ${err.message}`, 'error');
+            }
+        };
+
+        // Verifică dacă utilizatorul există în baza de date
+        window.checkUserExists = async function() {
+            const email = 'lucian.cebuc@gmail.com';
+            log(`👤 Verific dacă utilizatorul ${email} există în baza de date...`);
+            
+            try {
+                // Încearcă să găsești utilizatorul în auth.users (nu avem acces direct)
+                // Dar putem încerca o autentificare cu parolă greșită pentru a vedea mesajul
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: 'parola_gresita_pentru_test'
+                });
+                
+                if (error) {
+                    if (error.message.includes('Invalid login credentials')) {
+                        log(`✅ Utilizatorul ${email} EXISTĂ în baza de date (parolă incorectă)`, 'success');
+                        log('💡 Sugestie: Utilizatorul există, verificați parola corectă', 'info');
+                    } else if (error.message.includes('Email not confirmed')) {
+                        log(`⚠️ Utilizatorul ${email} există dar emailul nu este confirmat`, 'warning');
+                        log('💡 Sugestie: Confirmați emailul din linkul primit', 'warning');
+                    } else if (error.message.includes('User not found')) {
+                        log(`❌ Utilizatorul ${email} NU EXISTĂ în baza de date`, 'error');
+                        log('💡 Sugestie: Creați contul mai întâi', 'warning');
+                    } else {
+                        log(`❌ Eroare la verificarea utilizatorului: ${error.message}`, 'error');
+                        log(`Cod eroare: ${error.status || 'N/A'}`, 'error');
+                    }
+                } else {
+                    log(`🤔 Autentificare reușită cu parolă de test?! Ceva nu este în regulă...`, 'warning');
+                    // Deconectează utilizatorul
+                    await supabase.auth.signOut();
+                }
+                
+                // Test suplimentar: verifică configurația RLS
+                log('🔒 Testez configurația RLS (Row Level Security)...');
+                const { data: rlsTest, error: rlsError } = await supabase
+                    .from('user_profiles')
+                    .select('id')
+                    .limit(1);
+                    
+                if (rlsError) {
+                    log(`⚠️ Posibilă problemă RLS: ${rlsError.message}`, 'warning');
+                } else {
+                    log('✅ Configurația RLS pare să funcționeze', 'success');
+                }
+                
+            } catch (err) {
+                log(`❌ Eroare neașteptată la verificarea utilizatorului: ${err.message}`, 'error');
+            }
+        };
+
+        // Handler pentru formularul de login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                log('❌ Vă rugăm să completați toate câmpurile', 'error');
+                return;
+            }
+            
+            log(`🔐 Încep autentificarea pentru: ${email}`);
+            log('📧 Verificând dacă utilizatorul există...');
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    log(`❌ Autentificare eșuată: ${error.message}`, 'error');
+                    log(`Cod eroare: ${error.status || 'N/A'}`, 'error');
+                    log(`Detalii complete: ${JSON.stringify(error)}`, 'error');
+                    
+                    // Verifică tipul specific de eroare
+                    if (error.message.includes('Invalid login credentials')) {
+                        log('🔍 Analizez tipul de eroare...', 'info');
+                        log('📧 Email: ' + email, 'info');
+                        log('💡 Posibile cauze:', 'warning');
+                        log('   1. Parola este incorectă', 'warning');
+                        log('   2. Utilizatorul nu există în Supabase', 'warning');
+                        log('   3. Utilizatorul nu și-a confirmat email-ul', 'warning');
+                        log('💡 Sugestie: Verificați parola sau resetați-o', 'warning');
+                    } else if (error.message.includes('Email not confirmed')) {
+                        log('📧 Email neconfirmat detectat', 'warning');
+                        log('💡 Sugestie: Confirmați emailul din linkul primit', 'warning');
+                        log('📧 Utilizatorul există dar trebuie să-și confirme email-ul', 'info');
+                    } else if (error.message.includes('Too many requests')) {
+                        log('🚫 Prea multe încercări detectate', 'warning');
+                        log('💡 Sugestie: Așteptați câteva minute și încercați din nou', 'warning');
+                    } else if (error.message.includes('User not found')) {
+                        log('👤 Utilizatorul nu a fost găsit în baza de date', 'error');
+                        log('💡 Sugestie: Creați mai întâi un cont', 'warning');
+                    }
+                } else {
+                    log('✅ Autentificare REUȘITĂ!', 'success');
+                    log(`Utilizator: ${data.user.email}`, 'success');
+                    log(`ID: ${data.user.id}`, 'success');
+                    log(`Email confirmat: ${data.user.email_confirmed_at ? 'Da' : 'Nu'}`, 'success');
+                    log(`Ultima autentificare: ${data.user.last_sign_in_at}`, 'success');
+                    log(`Sesiune: ${data.session ? 'Activă' : 'Inactivă'}`, 'success');
+                    
+                    // Testează și încărcarea profilului
+                    log('👤 Testez încărcarea profilului utilizator...');
+                    try {
+                        const { data: profile, error: profileError } = await supabase
+                            .from('user_profiles')
+                            .select('*')
+                            .eq('id', data.user.id)
+                            .single();
+                            
+                        if (profileError) {
+                            log(`⚠️ Eroare la încărcarea profilului: ${profileError.message}`, 'warning');
+                            log(`Cod eroare profil: ${profileError.code || 'N/A'}`, 'warning');
+                            
+                            if (profileError.code === 'PGRST116') {
+                                log('💡 Profilul nu există încă - normal pentru utilizatori noi', 'info');
+                            }
+                        } else {
+                            log('✅ Profil utilizator încărcat cu succes!', 'success');
+                            log(`Nume companie: ${profile.company || 'Nu este setat'}`, 'info');
+                            log(`Data creării: ${profile.created_at || 'Nu este setată'}`, 'info');
+                        }
+                    } catch (profileErr) {
+                        log(`⚠️ Eroare la testarea profilului: ${profileErr.message}`, 'warning');
+                    }
+                    
+                    // Test suplimentar pentru RLS
+                    log('🔒 Testez configurația RLS după autentificare...');
+                    try {
+                        const { data: rlsData, error: rlsError } = await supabase
+                            .from('user_profiles')
+                            .select('id')
+                            .limit(1);
+                            
+                        if (rlsError) {
+                            log(`⚠️ Problemă RLS după autentificare: ${rlsError.message}`, 'warning');
+                        } else {
+                            log('✅ RLS funcționează corect după autentificare', 'success');
+                        }
+                    } catch (rlsErr) {
+                        log(`⚠️ Eroare la testarea RLS: ${rlsErr.message}`, 'warning');
+                    }
+                }
+            } catch (err) {
+                log(`❌ Eroare neașteptată: ${err.message}`, 'error');
+                log(`Stack trace: ${err.stack}`, 'error');
+            }
+        });
+
+        // Inițializare
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        log('🚀 Test de autentificare email inițializat');
+        log('📧 Email de test: lucian.cebuc@gmail.com');
+        log('🔧 Introduceți parola și apăsați "Testează Autentificare"');
+    </script>
+</body>
+</html>

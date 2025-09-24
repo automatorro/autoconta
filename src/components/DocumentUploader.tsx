@@ -30,6 +30,71 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
   const [uploadMethod, setUploadMethod] = useState<'scan' | 'photo' | 'import'>('scan');
 
+  const processOCR = async (fileUrl: string, fileId: string) => {
+    try {
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === fileId ? { ...f, status: 'processing', progress: 75 } : f
+      ));
+
+      // Simulăm procesul OCR - în implementarea reală, aici ar fi un apel API către serviciul OCR
+      // De exemplu: const ocrResult = await fetch('/api/ocr', { method: 'POST', body: JSON.stringify({ fileUrl }) });
+      
+      // Simulăm un delay pentru procesare OCR
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Simulăm rezultate OCR - în implementarea reală, acestea ar veni de la serviciul OCR
+      const mockOcrResult = {
+        success: true,
+        data: {
+          supplier: { name: 'Auto Detect', cui: '12345678' },
+          documentNumber: `INV-${Math.floor(Math.random() * 10000)}`,
+          date: new Date().toISOString(),
+          total: Math.floor(Math.random() * 1000) + 100,
+          vat: Math.floor(Math.random() * 100),
+          category: 'combustibil',
+          items: [{ description: 'Articol detectat automat', quantity: 1, price: 100 }]
+        }
+      };
+
+      // Actualizăm starea fișierului cu rezultatele OCR
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === fileId 
+          ? { 
+              ...f, 
+              status: 'uploaded', 
+              progress: 100,
+              ocrData: mockOcrResult.data 
+            } 
+          : f
+      ));
+
+      // Actualizăm fișierul selectat dacă este cel curent
+      if (selectedFile?.id === fileId) {
+        setSelectedFile(prev => prev ? { 
+          ...prev, 
+          status: 'uploaded', 
+          progress: 100,
+          ocrData: mockOcrResult.data 
+        } : prev);
+      }
+
+      return mockOcrResult.data;
+    } catch (error) {
+      console.error('OCR processing error:', error);
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === fileId ? { ...f, status: 'error', progress: 75 } : f
+      ));
+      
+      toast({
+        title: 'Eroare procesare OCR',
+        description: `Nu s-au putut extrage datele din document: ${error.message}`,
+        variant: 'destructive'
+      });
+      
+      return null;
+    }
+  };
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!authUser) {
       toast({
@@ -57,7 +122,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
         
         // Update progress
         setUploadedFiles(prev => prev.map(f => 
-          f.id === fileObj.id ? { ...f, progress: 50 } : f
+          f.id === fileObj.id ? { ...f, progress: 30 } : f
         ));
 
         const { data, error } = await supabase.storage
@@ -69,13 +134,23 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
         // Update status to uploaded
         setUploadedFiles(prev => prev.map(f => 
           f.id === fileObj.id 
-            ? { ...f, status: 'uploaded', progress: 100 }
+            ? { ...f, status: 'uploaded', progress: 50 }
             : f
         ));
 
+        // Obținem URL-ul fișierului pentru procesare OCR
+        const { data: urlData } = await supabase.storage
+          .from('documents')
+          .getPublicUrl(fileName);
+
+        if (urlData?.publicUrl) {
+          // Procesăm OCR pentru fișierul încărcat
+          await processOCR(urlData.publicUrl, fileObj.id);
+        }
+
         toast({
           title: 'Succes',
-          description: `${fileObj.file.name} a fost încărcat cu succes.`
+          description: `${fileObj.file.name} a fost încărcat și procesat cu succes.`
         });
 
         // Auto-select first uploaded file for form

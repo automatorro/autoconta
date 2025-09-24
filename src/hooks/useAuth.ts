@@ -193,8 +193,25 @@ export function useAuth() {
   }, [setUser, setSession, loadUserData]);
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
+    // Use proper redirect URLs based on environment
+    const isProduction = window.location.hostname === 'autoconta.lovable.app' || window.location.hostname.includes('.lovable.app');
+    const isLocalhost = window.location.hostname === 'localhost';
+
+    let redirectUrl = '/';
+
+    if (isProduction) {
+      redirectUrl = `https://autoconta.lovable.app/`;
+    } else if (isLocalhost) {
+      // Forțăm folosirea portului 8080 pentru dezvoltare locală
+      redirectUrl = `http://localhost:8080/`;
+    } else {
+      // Fallback pentru alte medii
+      redirectUrl = `${window.location.origin}/`;
+    }
+
+    console.log('📧 Email signup redirect URL:', redirectUrl);
+    console.log('🌐 Current environment detection - isProduction:', isProduction, 'isLocalhost:', isLocalhost, 'hostname:', window.location.hostname, 'port:', window.location.port);
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -202,14 +219,27 @@ export function useAuth() {
         emailRedirectTo: redirectUrl
       }
     });
+
+    console.log('📧 SignUp result - Error:', error);
+    if (error) {
+      console.error('❌ SignUp failed with error:', error.message, 'Code:', error.status);
+    }
+
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log('🔐 Starting email/password sign in for:', email);
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
+    console.log('🔐 Sign in result - Data:', data, 'Error:', error);
+    if (error) {
+      console.error('❌ Sign in failed:', error.message, 'Status:', error.status);
+    } else {
+      console.log('✅ Sign in successful');
+    }
     return { error };
   };
 
@@ -217,37 +247,53 @@ export function useAuth() {
     // Use proper redirect URLs based on environment
     const isProduction = window.location.hostname === 'autoconta.lovable.app' || window.location.hostname.includes('.lovable.app');
     const isLocalhost = window.location.hostname === 'localhost';
-    
+    const isLocalDev = window.location.port === '8080' || window.location.hostname === 'localhost';
+
     let redirectUrl = '/';
-    
+
     if (isProduction) {
-      redirectUrl = `${window.location.origin}/`;
-    } else if (isLocalhost) {
+      redirectUrl = `https://autoconta.lovable.app/`;
+    } else if (isLocalhost || isLocalDev) {
+      // Forțăm folosirea portului 8080 pentru dezvoltare locală
+      redirectUrl = `http://localhost:8080/`;
+    } else {
+      // Fallback pentru alte medii
       redirectUrl = `${window.location.origin}/`;
     }
-    
+
     console.log('🔗 Google OAuth redirect URL:', redirectUrl);
     console.log('🌐 Current origin:', window.location.origin);
     console.log('🌍 Current hostname:', window.location.hostname);
-    
-    if (isLocalhost) {
-      console.log('🧪 Running in local development environment');
+    console.log('🔧 Current port:', window.location.port);
+    console.log('🌐 Environment detection - isProduction:', isProduction, 'isLocalhost:', isLocalhost, 'isLocalDev:', isLocalDev);
+
+    if (isLocalhost || isLocalDev) {
+      console.log('🧪 Running in local development environment on port 8080');
+      console.log('⚠️  IMPORTANT: Make sure Google Cloud Console has http://localhost:8080 in Authorized JavaScript origins');
     } else if (isProduction) {
       console.log('🚀 Running in production environment');
     }
-    
-    const { error } = await supabase.auth.signInWithOAuth({
+
+    console.log('🔗 Starting Google OAuth with redirectTo:', redirectUrl);
+    console.log('🚨 If you get redirected to production instead of localhost, check Google Cloud Console configuration!');
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
         skipBrowserRedirect: false
       }
     });
-    
+
+    console.log('🔗 Google OAuth result - Data:', data, 'Error:', error);
+
     if (error) {
-      console.error('❌ Google OAuth error:', error);
+      console.error('❌ Google OAuth error:', error.message, 'Status:', error.status);
+      console.error('❌ Full error object:', error);
+    } else {
+      console.log('✅ Google OAuth initiated successfully, redirecting...');
     }
-    
+
     return { error };
   };
 
