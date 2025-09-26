@@ -197,16 +197,16 @@ export function useAuth() {
     const isProduction = window.location.hostname === 'autoconta.lovable.app' || window.location.hostname.includes('.lovable.app');
     const isLocalhost = window.location.hostname === 'localhost';
 
-    let redirectUrl = '/';
+    let redirectUrl = '/auth/callback';
 
     if (isProduction) {
-      redirectUrl = `https://autoconta.lovable.app/`;
+      redirectUrl = `https://autoconta.lovable.app/auth/callback`;
     } else if (isLocalhost) {
       // Forțăm folosirea portului 8080 pentru dezvoltare locală
-      redirectUrl = `http://localhost:8080/`;
+      redirectUrl = `http://localhost:8080/auth/callback`;
     } else {
       // Fallback pentru alte medii
-      redirectUrl = `${window.location.origin}/`;
+      redirectUrl = `${window.location.origin}/auth/callback`;
     }
 
     console.log('📧 Email signup redirect URL:', redirectUrl);
@@ -249,16 +249,16 @@ export function useAuth() {
     const isLocalhost = window.location.hostname === 'localhost';
     const isLocalDev = window.location.port === '8080' || window.location.hostname === 'localhost';
 
-    let redirectUrl = '/';
+    let redirectUrl = '/auth/callback';
 
     if (isProduction) {
-      redirectUrl = `https://autoconta.lovable.app/`;
+      redirectUrl = `https://autoconta.lovable.app/auth/callback`;
     } else if (isLocalhost || isLocalDev) {
       // Forțăm folosirea portului 8080 pentru dezvoltare locală
-      redirectUrl = `http://localhost:8080/`;
+      redirectUrl = `http://localhost:8080/auth/callback`;
     } else {
       // Fallback pentru alte medii
-      redirectUrl = `${window.location.origin}/`;
+      redirectUrl = `${window.location.origin}/auth/callback`;
     }
 
     console.log('🔗 Google OAuth redirect URL:', redirectUrl);

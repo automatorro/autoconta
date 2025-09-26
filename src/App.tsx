@@ -10,6 +10,7 @@ import Documents from "./pages/Documents";
 import Reconciliation from "./pages/Reconciliation";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BusinessManagement from "./pages/BusinessManagement";
@@ -187,6 +188,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
