@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import type { User, Session } from '@supabase/supabase-js';
 import { Company, Vehicle, Driver } from '@/types/accounting';
-import { testSupabaseConnection } from '@/utils/testSupabase';
+
 
 export function useAuth() {
   const { setUser, setSession, setCompany, setUserData, addVehicle, addDriver } = useAppStore();
@@ -143,9 +143,6 @@ export function useAuth() {
   };
 
   useEffect(() => {
-    // Test Supabase connection on initialization
-    testSupabaseConnection();
-    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {

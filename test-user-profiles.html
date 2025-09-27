@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test User Profiles</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        button { margin: 5px; padding: 10px 15px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test User Profiles Database</h1>
+    
+    <div>
+        <button onclick="testConnection()">🔗 Test Conexiune</button>
+        <button onclick="checkUserProfiles()">👥 Verifică User Profiles</button>
+        <button onclick="checkAuthUsers()">🔐 Verifică Auth Users</button>
+        <button onclick="createTestUser()">➕ Creează User Test</button>
+        <button onclick="clearResults()">🧹 Curăță Rezultate</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+
+        const supabaseUrl = 'https://ytjdvoyyiapkyzjrjllp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0amR2b3l5aWFwa3l6anJqbGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzYxNDUsImV4cCI6MjA3Mjc1MjE0NX0._Er5RxJmtzYMpXMU15Pi9M-xSjJwk1gORqrZwR8nf2g';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        window.testConnection = async function() {
+            try {
+                addResult('🔍 Testez conexiunea la Supabase...', 'info');
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    addResult(`❌ Eroare conexiune: ${error.message}`, 'error');
+                    addResult(`📋 Detalii eroare: ${JSON.stringify(error)}`, 'error');
+                } else {
+                    addResult(`✅ Conexiune reușită! Numărul de înregistrări în user_profiles: ${data || 'N/A'}`, 'success');
+                }
+            } catch (err) {
+                addResult(`❌ Eroare neașteptată: ${err.message}`, 'error');
+            }
+        };
+
+        window.checkUserProfiles = async function() {
+            try {
+                addResult('👥 Verific tabelul user_profiles...', 'info');
+                
+                const { data, error, count } = await supabase
+                    .from('user_profiles')
+                    .select('*', { count: 'exact' });
+                
+                if (error) {
+                    addResult(`❌ Eroare la citirea user_profiles: ${error.message}`, 'error');
+                } else {
+                    addResult(`✅ Găsite ${count} înregistrări în user_profiles`, 'success');
+                    if (data && data.length > 0) {
+                        addResult(`📋 Primele înregistrări:<pre>${JSON.stringify(data.slice(0, 3), null, 2)}</pre>`, 'info');
+                    } else {
+                        addResult('📋 Tabelul user_profiles este gol', 'info');
+                    }
+                }
+            } catch (err) {
+                addResult(`❌ Eroare neașteptată: ${err.message}`, 'error');
+            }
+        };
+
+        window.checkAuthUsers = async function() {
+            try {
+                addResult('🔐 Verific utilizatorii autentificați...', 'info');
+                
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    addResult(`❌ Eroare la verificarea sesiunii: ${error.message}`, 'error');
+                } else if (session) {
+                    addResult(`✅ Utilizator autentificat: ${session.user.email}`, 'success');
+                    addResult(`📋 ID utilizator: ${session.user.id}`, 'info');
+                } else {
+                    addResult('ℹ️ Niciun utilizator autentificat', 'info');
+                }
+            } catch (err) {
+                addResult(`❌ Eroare neașteptată: ${err.message}`, 'error');
+            }
+        };
+
+        window.createTestUser = async function() {
+            try {
+                addResult('➕ Încerc să creez un profil de test...', 'info');
+                
+                // Verifică dacă utilizatorul este autentificat
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    addResult('⚠️ Trebuie să fii autentificat pentru a crea un profil', 'error');
+                    return;
+                }
+
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .insert([
+                        {
+                            id: session.user.id,
+                            email: session.user.email,
+                            full_name: 'Test User',
+                            created_at: new Date().toISOString()
+                        }
+                    ])
+                    .select();
+                
+                if (error) {
+                    addResult(`❌ Eroare la crearea profilului: ${error.message}`, 'error');
+                } else {
+                    addResult(`✅ Profil creat cu succes!`, 'success');
+                    addResult(`📋 Profil creat:<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                }
+            } catch (err) {
+                addResult(`❌ Eroare neașteptată: ${err.message}`, 'error');
+            }
+        };
+
+        window.clearResults = function() {
+            document.getElementById('results').innerHTML = '';
+        };
+
+        // Test automat la încărcare
+        window.addEventListener('load', () => {
+            addResult('🚀 Pagina încărcată. Gata pentru teste!', 'success');
+        });
+    </script>
+</body>
+</html>

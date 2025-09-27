@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Rutare și Autentificare - AutoConta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Rutare și Autentificare</h1>
+        
+        <div class="test-section">
+            <h3>📍 Test Rutare</h3>
+            <p>Testează comportamentul rutării pentru diferite URL-uri:</p>
+            <button class="test-button" onclick="testRoute('/dashboard')">Test /dashboard</button>
+            <button class="test-button" onclick="testRoute('/settings')">Test /settings</button>
+            <button class="test-button" onclick="testRoute('/business')">Test /business</button>
+            <button class="test-button" onclick="testRoute('/documents')">Test /documents</button>
+            <button class="test-button" onclick="testRoute('/inexistent')">Test /inexistent</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Test Autentificare</h3>
+            <p>Verifică starea de autentificare și testează funcțiile:</p>
+            <button class="test-button" onclick="checkAuthState()">Verifică Starea Auth</button>
+            <button class="test-button" onclick="testGoogleAuth()">Test Google Auth</button>
+            <button class="test-button" onclick="clearAuthState()">Curăță Starea Auth</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🗄️ Test Baza de Date</h3>
+            <p>Testează conectivitatea cu Supabase:</p>
+            <button class="test-button" onclick="testSupabaseConnection()">Test Conexiune</button>
+            <button class="test-button" onclick="testUserProfile()">Test Profil Utilizator</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Log-uri</h3>
+            <div id="logs" class="log"></div>
+            <button class="test-button" onclick="clearLogs()">Curăță Log-uri</button>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logs.innerHTML += `<span class="${type}">${logEntry}</span>`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        function testRoute(path) {
+            log(`🧭 Testez rutarea către: ${path}`, 'info');
+            
+            // Verifică starea curentă
+            log(`📍 URL curent: ${window.location.href}`, 'info');
+            
+            // Încearcă să navigheze
+            try {
+                const newUrl = `${window.location.origin}${path}`;
+                log(`🔄 Navighez către: ${newUrl}`, 'info');
+                
+                // Deschide într-o fereastră nouă pentru a nu pierde testul
+                window.open(newUrl, '_blank');
+                log(`✅ Fereastră nouă deschisă pentru ${path}`, 'success');
+            } catch (error) {
+                log(`❌ Eroare la navigare: ${error.message}`, 'error');
+            }
+        }
+
+        function checkAuthState() {
+            log('🔍 Verificând starea de autentificare...', 'info');
+            
+            // Verifică localStorage pentru chei Supabase
+            const sbKeys = Object.keys(localStorage).filter(key => key.startsWith('sb-'));
+            log(`🔑 Chei Supabase în localStorage: ${sbKeys.length}`, sbKeys.length > 0 ? 'success' : 'warning');
+            
+            // Verifică starea Zustand
+            const zustandState = localStorage.getItem('autoconta-storage');
+            log(`🗄️ Stare Zustand: ${zustandState ? 'Există' : 'Nu există'}`, zustandState ? 'success' : 'warning');
+            
+            if (zustandState) {
+                try {
+                    const parsed = JSON.parse(zustandState);
+                    log(`👤 Utilizator în stare: ${parsed.state?.authUser?.email || 'Nu există'}`, parsed.state?.authUser ? 'success' : 'warning');
+                } catch (e) {
+                    log(`❌ Eroare la parsarea stării Zustand: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        function testGoogleAuth() {
+            log('🔗 Testez autentificarea Google...', 'info');
+            
+            // Verifică configurația OAuth
+            const currentOrigin = window.location.origin;
+            log(`🌐 Origin curent: ${currentOrigin}`, 'info');
+            
+            // Simulează click pe butonul Google Auth
+            log('⚠️ Pentru testul real, accesează aplicația principală și apasă "Continuă cu Google"', 'warning');
+            log('🔄 Sau deschide: http://localhost:8080/auth', 'info');
+            
+            // Deschide pagina de auth
+            window.open('http://localhost:8080/auth', '_blank');
+        }
+
+        function clearAuthState() {
+            log('🧹 Curățând starea de autentificare...', 'info');
+            
+            // Curăță localStorage
+            const keysToRemove = [];
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('sb-') || key === 'autoconta-storage') {
+                    keysToRemove.push(key);
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            log(`🗑️ Șterse ${keysToRemove.length} chei din localStorage`, 'success');
+            log('🔄 Reîncarcă aplicația pentru a vedea efectul', 'info');
+        }
+
+        async function testSupabaseConnection() {
+            log('🔌 Testez conexiunea cu Supabase...', 'info');
+            
+            try {
+                // Test simplu de fetch către Supabase
+                const response = await fetch('https://ytjdvoyyiapkyzjrjllp.supabase.co/rest/v1/', {
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0amR2b3l5aWFwa3l6anJqbGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzYxNDUsImV4cCI6MjA3Mjc1MjE0NX0._Er5RxJmtzYMpXMU15Pi9M-xSjJwk1gORqrZwR8nf2g'
+                    }
+                });
+                
+                if (response.ok) {
+                    log('✅ Conexiunea cu Supabase funcționează', 'success');
+                } else {
+                    log(`⚠️ Răspuns Supabase: ${response.status} ${response.statusText}`, 'warning');
+                }
+            } catch (error) {
+                log(`❌ Eroare conexiune Supabase: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUserProfile() {
+            log('👤 Testez accesul la tabelul user_profiles...', 'info');
+            
+            try {
+                const response = await fetch('https://ytjdvoyyiapkyzjrjllp.supabase.co/rest/v1/user_profiles?select=id&limit=1', {
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0amR2b3l5aWFwa3l6anJqbGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzYxNDUsImV4cCI6MjA3Mjc1MjE0NX0._Er5RxJmtzYMpXMU15Pi9M-xSjJwk1gORqrZwR8nf2g',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Tabelul user_profiles este accesibil. Înregistrări: ${data.length}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`⚠️ Eroare acces user_profiles: ${response.status} - ${errorText}`, 'warning');
+                }
+            } catch (error) {
+                log(`❌ Eroare test user_profiles: ${error.message}`, 'error');
+            }
+        }
+
+        // Inițializare
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Test de rutare și autentificare inițializat', 'success');
+            log('📍 URL curent: ' + window.location.href, 'info');
+            checkAuthState();
+        });
+    </script>
+</body>
+</html>

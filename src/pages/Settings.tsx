@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Moon, Sun, BellRing, Globe, Lock, LogOut, Save } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, BellRing, Globe, Lock, LogOut, Save, Bug, Car, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -411,7 +411,7 @@ export default function Settings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
             General
@@ -431,6 +431,10 @@ export default function Settings() {
           <TabsTrigger value="drivers" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Șoferi
+          </TabsTrigger>
+          <TabsTrigger value="debug" className="flex items-center gap-2">
+            <Bug className="h-4 w-4" />
+            Debug
           </TabsTrigger>
         </TabsList>
 
@@ -1077,6 +1081,169 @@ export default function Settings() {
                 <p className="text-sm text-muted-foreground">
                   Datele sunt salvate automat în cloud. Ultima salvare: {new Date().toLocaleDateString('ro-RO')}
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="debug" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Debug & Test Tools</CardTitle>
+              <CardDescription>Instrumente pentru testarea routing-ului și autentificării</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/dashboard')}
+                  className="h-20 flex-col gap-2"
+                >
+                  <SettingsIcon className="h-6 w-6" />
+                  <div className="text-center">
+                    <div className="font-medium">Test Dashboard</div>
+                    <div className="text-xs text-muted-foreground">Navighează la dashboard</div>
+                  </div>
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/invoices')}
+                  className="h-20 flex-col gap-2"
+                >
+                  <SettingsIcon className="h-6 w-6" />
+                  <div className="text-center">
+                    <div className="font-medium">Test Invoices</div>
+                    <div className="text-xs text-muted-foreground">Navighează la facturi</div>
+                  </div>
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    console.log('Auth User:', authUser);
+                    console.log('User Profile:', user);
+                    toast({
+                      title: "Stare autentificare",
+                      description: `Auth User: ${authUser ? 'Conectat' : 'Neconectat'}, Profile: ${user ? 'Încărcat' : 'Neîncărcat'}`,
+                    });
+                  }}
+                  className="h-20 flex-col gap-2"
+                >
+                  <Lock className="h-6 w-6" />
+                  <div className="text-center">
+                    <div className="font-medium">Check Auth State</div>
+                    <div className="text-xs text-muted-foreground">Verifică starea autentificării</div>
+                  </div>
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    toast({
+                      title: "Storage curățat",
+                      description: "LocalStorage și SessionStorage au fost curățate",
+                    });
+                  }}
+                  className="h-20 flex-col gap-2"
+                >
+                  <LogOut className="h-6 w-6" />
+                  <div className="text-center">
+                    <div className="font-medium">Clear Storage</div>
+                    <div className="text-xs text-muted-foreground">Curăță storage-ul local</div>
+                  </div>
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    try {
+                      const { createClient } = await import('@supabase/supabase-js');
+                      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+                      const supabase = createClient(supabaseUrl, supabaseKey);
+                      
+                      const { data, error } = await supabase.from('user_profiles').select('*').limit(1);
+                      
+                      if (error) {
+                        toast({
+                          title: "Eroare Supabase",
+                          description: `Eroare: ${error.message}`,
+                          variant: "destructive",
+                        });
+                      } else {
+                        toast({
+                          title: "Conexiune Supabase OK",
+                          description: `Conectat cu succes. Găsite ${data?.length || 0} profiluri`,
+                        });
+                      }
+                    } catch (error) {
+                      toast({
+                        title: "Eroare conexiune",
+                        description: `Eroare: ${error instanceof Error ? error.message : 'Necunoscută'}`,
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  className="h-20 flex-col gap-2"
+                >
+                  <Globe className="h-6 w-6" />
+                  <div className="text-center">
+                    <div className="font-medium">Test Supabase</div>
+                    <div className="text-xs text-muted-foreground">Testează conexiunea</div>
+                  </div>
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const currentUrl = window.location.href;
+                    const params = new URLSearchParams(window.location.search);
+                    const hash = window.location.hash;
+                    
+                    console.log('Current URL:', currentUrl);
+                    console.log('Search params:', Object.fromEntries(params));
+                    console.log('Hash:', hash);
+                    
+                    toast({
+                      title: "URL Info",
+                      description: `URL: ${currentUrl}`,
+                    });
+                  }}
+                  className="h-20 flex-col gap-2"
+                >
+                  <Globe className="h-6 w-6" />
+                  <div className="text-center">
+                    <div className="font-medium">URL Info</div>
+                    <div className="text-xs text-muted-foreground">Afișează info URL</div>
+                  </div>
+                </Button>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-medium">Informații sistem</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="font-medium">Auth User ID</div>
+                    <div className="text-muted-foreground">{authUser?.id || 'N/A'}</div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="font-medium">User Profile ID</div>
+                    <div className="text-muted-foreground">{user?.id || 'N/A'}</div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="font-medium">Current URL</div>
+                    <div className="text-muted-foreground break-all">{window.location.pathname}</div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="font-medium">Environment</div>
+                    <div className="text-muted-foreground">{window.location.hostname === 'localhost' ? 'Development' : 'Production'}</div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
