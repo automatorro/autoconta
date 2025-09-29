@@ -46,14 +46,27 @@ const AuthCallback = () => {
         if (session?.user) {
           console.log('✅ User authenticated successfully:', session.user.email);
           
-          // Așteaptă puțin pentru ca useAuth să proceseze sesiunea
-          setTimeout(() => {
-            toast({
-              title: "Autentificare reușită",
-              description: "Bun venit în AutoConta!",
-            });
-            navigate('/dashboard');
-          }, 500);
+          // Așteaptă ca authUser să fie setat în store
+          const waitForAuthUser = () => {
+            const checkAuthUser = () => {
+              const { authUser } = useAppStore.getState();
+              if (authUser) {
+                console.log('✅ AuthUser set in store, navigating to dashboard');
+                toast({
+                  title: "Autentificare reușită",
+                  description: "Bun venit în AutoConta!",
+                });
+                navigate('/dashboard');
+              } else {
+                console.log('⏳ Waiting for authUser to be set...');
+                setTimeout(checkAuthUser, 100);
+              }
+            };
+            checkAuthUser();
+          };
+          
+          // Începe să verifice după o scurtă întârziere
+          setTimeout(waitForAuthUser, 200);
         } else {
           console.log('❌ No session found, redirecting to auth');
           navigate('/auth');

@@ -25,6 +25,7 @@ export function AppHeader({ className }: AppHeaderProps) {
   const alerts = getActiveAlerts();
   const alertsCount = alerts.length;
   const userName = authUser?.email || user.company?.name || "Utilizator";
+  const companyCIF = user.company?.cif || "Necompletat";
   const currentMonth = "Noiembrie 2024";
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -187,7 +188,7 @@ export function AppHeader({ className }: AppHeaderProps) {
                   {userName}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  CIF: RO12345678
+                  CIF: {companyCIF}
                 </p>
               </div>
               <ChevronDown className="h-3 w-3 text-muted-foreground" />

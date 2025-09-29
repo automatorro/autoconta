@@ -157,6 +157,7 @@ export default function Auth() {
                         onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                         className="pl-10"
                         disabled={isLoading}
+                        autoComplete="email"
                       />
                     </div>
                   </div>
@@ -173,6 +174,7 @@ export default function Auth() {
                         onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                         className="pl-10 pr-10"
                         disabled={isLoading}
+                        autoComplete="current-password"
                       />
                       <button
                         type="button"
@@ -205,6 +207,7 @@ export default function Auth() {
                         onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
                         className="pl-10"
                         disabled={isLoading}
+                        autoComplete="email"
                       />
                     </div>
                   </div>
@@ -221,6 +224,7 @@ export default function Auth() {
                         onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                         className="pl-10"
                         disabled={isLoading}
+                        autoComplete="new-password"
                       />
                     </div>
                   </div>
@@ -237,6 +241,7 @@ export default function Auth() {
                         onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
                         className="pl-10"
                         disabled={isLoading}
+                        autoComplete="new-password"
                       />
                     </div>
                   </div>

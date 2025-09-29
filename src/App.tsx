@@ -199,6 +199,9 @@ function AppRoutes() {
     <Routes>
 
       
+      {/* Auth callback route for authenticated users */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      
       {/* Main app layout with all modules */}
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />

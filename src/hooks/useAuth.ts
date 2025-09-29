@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import type { User, Session } from '@supabase/supabase-js';
@@ -8,8 +8,38 @@ import { Company, Vehicle, Driver } from '@/types/accounting';
 export function useAuth() {
   const { setUser, setSession, setCompany, setUserData, addVehicle, addDriver } = useAppStore();
 
+  // Function to create a new user profile
+  const createUserProfile = async (userId: string, email: string) => {
+    console.log('🆕 Creating new user profile for userId:', userId, 'email:', email);
+    try {
+      const { data: newProfile, error: createError } = await supabase
+        .from('user_profiles' as any)
+        .insert({
+          user_id: userId,
+          contact_email: email,
+          setup_completed: false,
+          vat_intra_community: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Error creating user profile:', createError);
+        return null;
+      }
+
+      console.log('✅ User profile created successfully:', newProfile);
+      return newProfile;
+    } catch (error) {
+      console.error('❌ Exception creating user profile:', error);
+      return null;
+    }
+  };
+
   // Function to load user data from Supabase
-  const loadUserData = async (userId: string) => {
+  const loadUserData = useCallback(async (userId: string, userEmail?: string) => {
     console.log('🔄 Loading user data for userId:', userId);
     try {
       // Load user profile - use any to bypass TypeScript restrictions
@@ -21,6 +51,26 @@ export function useAuth() {
       
       console.log('📊 Profile data:', profile);
       console.log('❌ Profile error:', profileError);
+
+      // If no profile exists, create one
+      if (!profile && profileError?.code === 'PGRST116' && userEmail) {
+        console.log('🆕 No profile found, creating new profile...');
+        const newProfile = await createUserProfile(userId, userEmail);
+        if (newProfile) {
+          // Set basic user data with new profile
+          const userData = {
+            id: userId,
+            email: userEmail,
+            setupCompleted: false,
+            company: null,
+            vehicles: [],
+            drivers: []
+          };
+          console.log('👤 Setting user data with new profile:', userData);
+          setUserData(userData);
+          return;
+        }
+      }
 
       if (profile && (profile as any).setup_completed) {
         console.log('✅ Profile found and setup completed, loading company data...');
@@ -140,7 +190,7 @@ export function useAuth() {
     } catch (error) {
       console.error('❌ Error loading user data:', error);
     }
-  };
+  }, [setUserData, setCompany, addVehicle, addDriver]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -168,7 +218,7 @@ export function useAuth() {
         } else if (event === 'SIGNED_IN' && session?.user) {
           console.log('🚀 User signed in, loading user data...');
           // Load user data when signed in
-          await loadUserData(session.user.id);
+          await loadUserData(session.user.id, session.user.email || undefined);
         }
       }
     );
@@ -182,12 +232,12 @@ export function useAuth() {
       // Load user data if session exists
       if (session?.user) {
         console.log('📥 Existing session found, loading user data...');
-        await loadUserData(session.user.id);
+        await loadUserData(session.user.id, session.user.email || undefined);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setSession, loadUserData]);
+  }, [setUser, setSession]);
 
   const signUp = async (email: string, password: string) => {
     // Use proper redirect URLs based on environment
@@ -199,8 +249,8 @@ export function useAuth() {
     if (isProduction) {
       redirectUrl = `https://autoconta.lovable.app/auth/callback`;
     } else if (isLocalhost) {
-      // Forțăm folosirea portului 8080 pentru dezvoltare locală
-      redirectUrl = `http://localhost:8080/auth/callback`;
+      // Folosim portul curent pentru dezvoltare locală
+      redirectUrl = `${window.location.origin}/auth/callback`;
     } else {
       // Fallback pentru alte medii
       redirectUrl = `${window.location.origin}/auth/callback`;
@@ -251,8 +301,8 @@ export function useAuth() {
     if (isProduction) {
       redirectUrl = `https://autoconta.lovable.app/auth/callback`;
     } else if (isLocalhost || isLocalDev) {
-      // Forțăm folosirea portului 8080 pentru dezvoltare locală
-      redirectUrl = `http://localhost:8080/auth/callback`;
+      // Folosim portul curent pentru dezvoltare locală
+      redirectUrl = `${window.location.origin}/auth/callback`;
     } else {
       // Fallback pentru alte medii
       redirectUrl = `${window.location.origin}/auth/callback`;
@@ -265,8 +315,8 @@ export function useAuth() {
     console.log('🌐 Environment detection - isProduction:', isProduction, 'isLocalhost:', isLocalhost, 'isLocalDev:', isLocalDev);
 
     if (isLocalhost || isLocalDev) {
-      console.log('🧪 Running in local development environment on port 8080');
-      console.log('⚠️  IMPORTANT: Make sure Google Cloud Console has http://localhost:8080 in Authorized JavaScript origins');
+      console.log('🧪 Running in local development environment on port', window.location.port);
+      console.log('⚠️  IMPORTANT: Make sure Google Cloud Console has', window.location.origin, 'in Authorized JavaScript origins');
     } else if (isProduction) {
       console.log('🚀 Running in production environment');
     }
