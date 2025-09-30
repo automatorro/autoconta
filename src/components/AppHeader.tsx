@@ -1,5 +1,5 @@
 import { Bell, User, ChevronDown, AlertTriangle, Settings, LogOut } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,6 +28,7 @@ export function AppHeader({ className }: AppHeaderProps) {
   const companyCIF = user.company?.cif || "Necompletat";
   const currentMonth = "Noiembrie 2024";
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -85,7 +86,7 @@ export function AppHeader({ className }: AppHeaderProps) {
     )}>
       {/* Left side - Sidebar trigger and breadcrumb */}
       <div className="flex items-center gap-4">
-        <SidebarTrigger className="h-8 w-8" />
+        {location.pathname !== '/' && <SidebarTrigger className="h-8 w-8" />}
         
         <div
           role="link"
@@ -146,7 +147,15 @@ export function AppHeader({ className }: AppHeaderProps) {
             <DropdownMenuSeparator />
             
             {/* Sample notifications */}
-            <DropdownMenuItem className="flex items-start gap-3 p-3">
+            <DropdownMenuItem 
+              className="flex items-start gap-3 p-3"
+              onClick={() => {
+                toast({
+                  title: "ITP expiră în 7 zile",
+                  description: "Vehicul B-123-ABC necesită înnoirea ITP-ului.",
+                });
+              }}
+            >
               <AlertTriangle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">ITP expiră în 7 zile</p>
@@ -156,7 +165,15 @@ export function AppHeader({ className }: AppHeaderProps) {
               </div>
             </DropdownMenuItem>
             
-            <DropdownMenuItem className="flex items-start gap-3 p-3">
+            <DropdownMenuItem 
+              className="flex items-start gap-3 p-3"
+              onClick={() => {
+                toast({
+                  title: "Declarația 301 TVA",
+                  description: "Termen limită: 25 Noiembrie. Nu uitați să depuneți declarația!",
+                });
+              }}
+            >
               <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Declarația 301 TVA</p>
@@ -167,7 +184,15 @@ export function AppHeader({ className }: AppHeaderProps) {
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-center text-sm text-primary">
+            <DropdownMenuItem 
+              className="text-center text-sm text-primary"
+              onClick={() => {
+                toast({
+                  title: "Toate notificările",
+                  description: "Funcționalitatea va fi disponibilă în curând.",
+                });
+              }}
+            >
               Vezi toate notificările
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -197,21 +222,29 @@ export function AppHeader({ className }: AppHeaderProps) {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Contul meu</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
               <User className="mr-2 h-4 w-4" />
               Profil firmă
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
               <Settings className="mr-2 h-4 w-4" />
-              <Link to="/settings" className="flex-1">
-                Setări și Management
-              </Link>
+              Setări și Management
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              toast({
+                title: "În curând",
+                description: "Funcționalitatea de backup va fi disponibilă în curând.",
+              });
+            }}>
               Backup & Export
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              toast({
+                title: "Suport tehnic",
+                description: "Pentru suport, contactați-ne la support@autoconta.ro",
+              });
+            }}>
               Suport tehnic
             </DropdownMenuItem>
             <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
