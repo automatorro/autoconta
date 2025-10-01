@@ -166,8 +166,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
     if (validation.warnings.length > 0) {
       toast({
         title: 'Avertismente la validarea datelor',
-        description: validation.warnings.join('\n'),
-        variant: 'warning'
+        description: validation.warnings.join('\n')
       });
     }
     
@@ -221,15 +220,13 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
         } else {
           toast({
             title: 'Extragere parțială',
-            description: 'Datele au fost extrase, dar există erori de validare. Verificați și corectați manual.',
-            variant: 'warning'
+            description: 'Datele au fost extrase, dar există erori de validare. Verificați și corectați manual.'
           });
         }
       } else {
         toast({
           title: 'Extragere eșuată',
-          description: 'Nu s-au putut extrage date din document. Completați manual.',
-          variant: 'warning'
+          description: 'Nu s-au putut extrage date din document. Completați manual.'
         });
       }
     } catch (error) {

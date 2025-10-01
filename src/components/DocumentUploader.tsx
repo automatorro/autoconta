@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { DocumentForm } from '@/components/DocumentForm';
+import { useOCR } from '@/hooks/useOCR';
+import { OCRResult } from '@/services/ocrService';
 
 interface UploadedFile {
   file: File;
@@ -17,6 +19,7 @@ interface UploadedFile {
   progress: number;
   id: string;
   documentId?: string;
+  ocrData?: OCRResult;
 }
 
 interface DocumentUploaderProps {
@@ -26,68 +29,60 @@ interface DocumentUploaderProps {
 export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComplete }) => {
   const { toast } = useToast();
   const { authUser, addDocument } = useAppStore();
+  const { processImage, isProcessing } = useOCR();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
   const [uploadMethod, setUploadMethod] = useState<'scan' | 'photo' | 'import'>('scan');
 
-  const processOCR = async (fileUrl: string, fileId: string) => {
+  const processOCR = async (file: File, fileId: string) => {
     try {
       setUploadedFiles(prev => prev.map(f => 
         f.id === fileId ? { ...f, status: 'processing', progress: 75 } : f
       ));
 
-      // Simulăm procesul OCR - în implementarea reală, aici ar fi un apel API către serviciul OCR
-      // De exemplu: const ocrResult = await fetch('/api/ocr', { method: 'POST', body: JSON.stringify({ fileUrl }) });
+      console.log('🔍 Starting real OCR processing for file:', file.name);
       
-      // Simulăm un delay pentru procesare OCR
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simulăm rezultate OCR - în implementarea reală, acestea ar veni de la serviciul OCR
-      const mockOcrResult = {
-        success: true,
-        data: {
-          supplier: { name: 'Auto Detect', cui: '12345678' },
-          documentNumber: `INV-${Math.floor(Math.random() * 10000)}`,
-          date: new Date().toISOString(),
-          total: Math.floor(Math.random() * 1000) + 100,
-          vat: Math.floor(Math.random() * 100),
-          category: 'combustibil',
-          items: [{ description: 'Articol detectat automat', quantity: 1, price: 100 }]
-        }
-      };
+      // Call real OCR service
+      const ocrResult = await processImage(file);
 
-      // Actualizăm starea fișierului cu rezultatele OCR
+      if (!ocrResult) {
+        throw new Error('OCR nu a returnat rezultate');
+      }
+
+      console.log('✅ OCR processing completed:', ocrResult);
+
+      // Update file state with OCR results
       setUploadedFiles(prev => prev.map(f => 
         f.id === fileId 
           ? { 
               ...f, 
               status: 'uploaded', 
               progress: 100,
-              ocrData: mockOcrResult.data 
+              ocrData: ocrResult 
             } 
           : f
       ));
 
-      // Actualizăm fișierul selectat dacă este cel curent
+      // Update selected file if it's the current one
       if (selectedFile?.id === fileId) {
         setSelectedFile(prev => prev ? { 
           ...prev, 
           status: 'uploaded', 
           progress: 100,
-          ocrData: mockOcrResult.data 
+          ocrData: ocrResult 
         } : prev);
       }
 
-      return mockOcrResult.data;
+      return ocrResult;
     } catch (error) {
-      console.error('OCR processing error:', error);
+      console.error('❌ OCR processing error:', error);
       setUploadedFiles(prev => prev.map(f => 
         f.id === fileId ? { ...f, status: 'error', progress: 75 } : f
       ));
       
       toast({
         title: 'Eroare procesare OCR',
-        description: `Nu s-au putut extrage datele din document: ${error.message}`,
+        description: error instanceof Error ? error.message : 'Eroare necunoscută',
         variant: 'destructive'
       });
       
@@ -138,14 +133,15 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
             : f
         ));
 
-        // Obținem URL-ul fișierului pentru procesare OCR
-        const { data: urlData } = await supabase.storage
-          .from('documents')
-          .getPublicUrl(fileName);
-
-        if (urlData?.publicUrl) {
-          // Procesăm OCR pentru fișierul încărcat
-          await processOCR(urlData.publicUrl, fileObj.id);
+        // Process OCR only for images
+        if (fileObj.file.type.startsWith('image/')) {
+          console.log('📸 Image detected, starting OCR processing...');
+          await processOCR(fileObj.file, fileObj.id);
+        } else {
+          console.log('📄 Non-image file, skipping OCR');
+          setUploadedFiles(prev => prev.map(f => 
+            f.id === fileObj.id ? { ...f, status: 'uploaded', progress: 100 } : f
+          ));
         }
 
         toast({
