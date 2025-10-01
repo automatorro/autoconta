@@ -1,0 +1,43 @@
+# Cache control headers for Netlify deployment
+# Force refresh for JavaScript and CSS files to prevent cache issues
+
+# Main application files - no cache
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# JavaScript files - no cache
+/*.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# CSS files - no cache  
+/*.css
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# HTML files - no cache
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# Assets directory - short cache for images and fonts
+/assets/*
+  Cache-Control: public, max-age=300
+
+# Static files - short cache
+/*.svg
+  Cache-Control: public, max-age=300
+  
+/*.ico
+  Cache-Control: public, max-age=300
+
+# API routes - no cache
+/api/*
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
