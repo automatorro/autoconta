@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppStore } from "@/store/useAppStore";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import Setup from "./Setup";
 import { 
   Dialog,
   DialogContent,
@@ -17,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Vehicle } from "@/types/accounting";
+import { Vehicle, Driver } from "@/types/accounting";
 
 export default function BusinessManagement() {
   const { user, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver } = useAppStore();
@@ -97,7 +96,7 @@ export default function BusinessManagement() {
     
     try {
       if (currentVehicle.id) {
-        updateVehicle(currentVehicle);
+        updateVehicle(currentVehicle.id, currentVehicle);
       } else {
         addVehicle({
           ...currentVehicle,
@@ -125,7 +124,7 @@ export default function BusinessManagement() {
     
     try {
       if (currentDriver.id) {
-        updateDriver(currentDriver);
+        updateDriver(currentDriver.id, currentDriver);
       } else {
         addDriver({
           ...currentDriver,
@@ -430,9 +429,12 @@ export default function BusinessManagement() {
                   value={currentVehicle?.documents?.itp?.expiryDate ? new Date(currentVehicle.documents.itp.expiryDate).toISOString().split('T')[0] : ""}
                   onChange={(e) => {
                     const newVehicle = { ...currentVehicle || {} } as Vehicle;
-                    if (!newVehicle.documents) newVehicle.documents = {};
-                    if (!newVehicle.documents.itp) newVehicle.documents.itp = { expiryDate: "" };
-                    newVehicle.documents.itp.expiryDate = e.target.value;
+                    if (!newVehicle.documents) newVehicle.documents = {
+                      itp: { documentNumber: '', issueDate: new Date(), expiryDate: new Date() },
+                      rca: { documentNumber: '', issueDate: new Date(), expiryDate: new Date() }
+                    };
+                    if (!newVehicle.documents.itp) newVehicle.documents.itp = { documentNumber: '', issueDate: new Date(), expiryDate: new Date() };
+                    newVehicle.documents.itp.expiryDate = new Date(e.target.value);
                     setCurrentVehicle(newVehicle);
                   }}
                 />
@@ -445,9 +447,12 @@ export default function BusinessManagement() {
                   value={currentVehicle?.documents?.rca?.expiryDate ? new Date(currentVehicle.documents.rca.expiryDate).toISOString().split('T')[0] : ""}
                   onChange={(e) => {
                     const newVehicle = { ...currentVehicle || {} } as Vehicle;
-                    if (!newVehicle.documents) newVehicle.documents = {};
-                    if (!newVehicle.documents.rca) newVehicle.documents.rca = { expiryDate: "" };
-                    newVehicle.documents.rca.expiryDate = e.target.value;
+                    if (!newVehicle.documents) newVehicle.documents = {
+                      itp: { documentNumber: '', issueDate: new Date(), expiryDate: new Date() },
+                      rca: { documentNumber: '', issueDate: new Date(), expiryDate: new Date() }
+                    };
+                    if (!newVehicle.documents.rca) newVehicle.documents.rca = { documentNumber: '', issueDate: new Date(), expiryDate: new Date() };
+                    newVehicle.documents.rca.expiryDate = new Date(e.target.value);
                     setCurrentVehicle(newVehicle);
                   }}
                 />
@@ -503,25 +508,6 @@ export default function BusinessManagement() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="licenseCategory">Categorie permis</Label>
-                <Input
-                  id="licenseCategory"
-                  value={currentDriver?.licenseCategory || ""}
-                  onChange={(e) => setCurrentDriver({ ...currentDriver || {}, licenseCategory: e.target.value } as Driver)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="licenseExpiry">Permis expiră</Label>
-                <Input
-                  id="licenseExpiry"
-                  type="date"
-                  value={currentDriver?.licenseExpiryDate ? new Date(currentDriver.licenseExpiryDate).toISOString().split('T')[0] : ""}
-                  onChange={(e) => setCurrentDriver({ ...currentDriver || {}, licenseExpiryDate: e.target.value } as Driver)}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
                 <Label htmlFor="attestation">Atestat expiră</Label>
                 <Input
                   id="attestation"
@@ -529,9 +515,12 @@ export default function BusinessManagement() {
                   value={currentDriver?.certificates?.professionalAttestation?.expiryDate ? new Date(currentDriver.certificates.professionalAttestation.expiryDate).toISOString().split('T')[0] : ""}
                   onChange={(e) => {
                     const newDriver = { ...currentDriver || {} } as Driver;
-                    if (!newDriver.certificates) newDriver.certificates = { professionalAttestation: { expiryDate: "" }, medicalCertificate: { expiryDate: "" } };
-                    if (!newDriver.certificates.professionalAttestation) newDriver.certificates.professionalAttestation = { expiryDate: "" };
-                    newDriver.certificates.professionalAttestation.expiryDate = e.target.value;
+                    if (!newDriver.certificates) newDriver.certificates = { 
+                      professionalAttestation: { documentNumber: '', issueDate: new Date(), expiryDate: new Date() }, 
+                      medicalCertificate: { documentNumber: '', issueDate: new Date(), expiryDate: new Date() } 
+                    };
+                    if (!newDriver.certificates.professionalAttestation) newDriver.certificates.professionalAttestation = { documentNumber: '', issueDate: new Date(), expiryDate: new Date() };
+                    newDriver.certificates.professionalAttestation.expiryDate = new Date(e.target.value);
                     setCurrentDriver(newDriver);
                   }}
                 />
@@ -544,9 +533,12 @@ export default function BusinessManagement() {
                   value={currentDriver?.certificates?.medicalCertificate?.expiryDate ? new Date(currentDriver.certificates.medicalCertificate.expiryDate).toISOString().split('T')[0] : ""}
                   onChange={(e) => {
                     const newDriver = { ...currentDriver || {} } as Driver;
-                    if (!newDriver.certificates) newDriver.certificates = { professionalAttestation: { expiryDate: "" }, medicalCertificate: { expiryDate: "" } };
-                    if (!newDriver.certificates.medicalCertificate) newDriver.certificates.medicalCertificate = { expiryDate: "" };
-                    newDriver.certificates.medicalCertificate.expiryDate = e.target.value;
+                    if (!newDriver.certificates) newDriver.certificates = { 
+                      professionalAttestation: { documentNumber: '', issueDate: new Date(), expiryDate: new Date() }, 
+                      medicalCertificate: { documentNumber: '', issueDate: new Date(), expiryDate: new Date() } 
+                    };
+                    if (!newDriver.certificates.medicalCertificate) newDriver.certificates.medicalCertificate = { documentNumber: '', issueDate: new Date(), expiryDate: new Date() };
+                    newDriver.certificates.medicalCertificate.expiryDate = new Date(e.target.value);
                     setCurrentDriver(newDriver);
                   }}
                 />

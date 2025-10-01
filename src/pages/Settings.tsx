@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings as SettingsIcon, Moon, Sun, BellRing, Globe, Lock, LogOut, Save, Bug, Car, Users } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, BellRing, Globe, Lock, LogOut, Save, Bug, Car, Users, Plus, Edit, Trash2, AlertTriangle, Download, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,14 +11,40 @@ import { Separator } from "@/components/ui/separator";
 import { useAppStore } from "@/store/useAppStore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Vehicle, Driver } from "@/types/accounting";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function Settings() {
-  const { authUser, user } = useAppStore();
+  const { authUser, user, setCompany, updateVehicle, addVehicle, removeVehicle, updateDriver, addDriver, removeDriver } = useAppStore();
   const { toast } = useToast();
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
+  
+  // Company data state
+  const [companyData, setCompanyData] = useState({
+    companyName: user.company?.name || '',
+    companyType: user.company?.type || 'PFA',
+    cif: user.company?.cif || '',
+    cnp: user.company?.cnp || '',
+    vatPayer: user.company?.vatPayer || false,
+    vatIntraCommunity: user.company?.vatIntraCommunity || '',
+    address: {
+      street: user.company?.address?.street || '',
+      city: user.company?.address?.city || '',
+      county: user.company?.address?.county || '',
+      postalCode: user.company?.address?.postalCode || ''
+    },
+    contact: {
+      phone: user.company?.contact?.phone || '',
+      email: user.company?.contact?.email || ''
+    }
+  });
 
   // Settings form data
   const [settingsForm, setSettingsForm] = useState({
@@ -1233,7 +1259,7 @@ export default function Settings() {
                   </div>
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <div className="font-medium">User Profile ID</div>
-                    <div className="text-muted-foreground">{user?.id || 'N/A'}</div>
+                    <div className="text-muted-foreground">{authUser?.id || 'N/A'}</div>
                   </div>
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <div className="font-medium">Current URL</div>

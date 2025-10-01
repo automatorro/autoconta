@@ -386,44 +386,4 @@ export default function Setup() {
       </Card>
     </div>
   );
-    
-    setIsLoading(true);
-    try {
-      // Mark setup as completed without company data
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: authUser.id,
-          setup_completed: true
-        });
-
-      if (error) throw error;
-
-      // Update user data with setup completed but no company
-      setUserData({
-        id: authUser.id,
-        email: authUser.email || '',
-        setupCompleted: true,
-        company: null,
-        vehicles: [],
-        drivers: []
-      });
-
-      toast({
-        title: "Configurare omisă",
-        description: "Poți adăuga datele companiei mai târziu din setări."
-      });
-
-      // Redirect to dashboard
-      navigate("/dashboard");
-    } catch (error) {
-      console.error('Error skipping setup:', error);
-      toast({
-        title: "Eroare",
-        description: "Nu s-a putut omite configurarea",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+};
