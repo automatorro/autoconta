@@ -19,10 +19,14 @@ import { Label } from "@/components/ui/label";
 import { Vehicle, Driver } from "@/types/accounting";
 
 export default function BusinessManagement() {
-  const { user, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver } = useAppStore();
+  const { user, authUser, setCompany, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver } = useAppStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("company");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // State pentru gestionarea companiei
+  const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
   
   // State pentru gestionarea vehiculelor
   const [isVehicleDialogOpen, setIsVehicleDialogOpen] = useState(false);
@@ -220,7 +224,7 @@ export default function BusinessManagement() {
                       <Download className="mr-2 h-4 w-4" />
                       Exportă date
                     </Button>
-                    <Button>
+                    <Button onClick={() => navigate('/settings')}>
                       <Edit className="mr-2 h-4 w-4" />
                       Editează
                     </Button>
@@ -231,7 +235,7 @@ export default function BusinessManagement() {
                   <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
                   <h3 className="mt-2 text-lg font-medium">Nu există date despre companie</h3>
                   <p className="text-muted-foreground">Adaugă informațiile companiei tale pentru a continua.</p>
-                  <Button className="mt-4">
+                  <Button className="mt-4" onClick={() => navigate('/settings')}>
                     <Plus className="mr-2 h-4 w-4" />
                     Adaugă companie
                   </Button>
