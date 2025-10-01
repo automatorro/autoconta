@@ -22,7 +22,7 @@ export const useDocuments = () => {
 
       const formattedDocuments: Document[] = data.map(doc => ({
         id: doc.id,
-        type: doc.type,
+        type: doc.type as 'expense' | 'invoice' | 'receipt',
         documentNumber: doc.document_number,
         date: new Date(doc.date),
         supplier: {
@@ -36,7 +36,7 @@ export const useDocuments = () => {
           totalAmount: doc.total_amount,
           vatRate: doc.vat_rate
         },
-        currency: doc.currency,
+        currency: doc.currency as 'RON' | 'EUR' | 'USD',
         category: doc.category as ExpenseCategory,
         description: doc.description,
         filePath: doc.file_path,

@@ -18,7 +18,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
   onSelect
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { documents, loading } = useDocuments();
+  const { documents } = useDocuments();
   const [filteredDocuments, setFilteredDocuments] = useState<any[]>([]);
 
   useEffect(() => {
@@ -78,11 +78,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="p-4 text-center">Se încarcă documentele...</td>
-                </tr>
-              ) : filteredDocuments.length === 0 ? (
+              {filteredDocuments.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-4 text-center">Nu s-au găsit documente</td>
                 </tr>

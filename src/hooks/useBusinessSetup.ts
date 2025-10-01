@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAppStore } from '@/store/useAppStore';
 
 interface BusinessSetupStatus {
   isBusinessSetupComplete: boolean;
@@ -9,12 +9,12 @@ interface BusinessSetupStatus {
 }
 
 export const useBusinessSetup = (): BusinessSetupStatus => {
-  const { user } = useAuth();
+  const { authUser } = useAppStore();
   const [isBusinessSetupComplete, setIsBusinessSetupComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const checkBusinessSetup = async () => {
-    if (!user) {
+    if (!authUser) {
       setIsBusinessSetupComplete(false);
       setIsLoading(false);
       return;
@@ -26,7 +26,7 @@ export const useBusinessSetup = (): BusinessSetupStatus => {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('setup_completed')
-        .eq('id', user.id)
+        .eq('user_id', authUser.id)
         .single();
 
       if (error) {
@@ -45,7 +45,7 @@ export const useBusinessSetup = (): BusinessSetupStatus => {
 
   useEffect(() => {
     checkBusinessSetup();
-  }, [user]);
+  }, [authUser]);
 
   return {
     isBusinessSetupComplete,
