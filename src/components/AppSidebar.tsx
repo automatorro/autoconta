@@ -35,11 +35,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 const modules = [
   {
+    id: "dashboard",
+    title: "Tablou de Bord",
+    url: "/dashboard",
+    icon: BarChart3,
+    description: "Overview general",
+    badge: null
+  },
+  {
     id: "business",
     title: "Gestionare Business",
     url: "/business",
     icon: Building2,
-    description: "Entitate, vehicule, șoferi",
+    description: "Companie, vehicule, șoferi",
     badge: null
   },
   {
@@ -47,7 +55,7 @@ const modules = [
     title: "Documente",
     url: "/documents",
     icon: FileText,
-    description: "OCR, upload, import CSV ",
+    description: "OCR, upload, import CSV",
     badge: "3"
   },
   {
@@ -59,12 +67,20 @@ const modules = [
     badge: null
   },
   {
+    id: "analytics",
+    title: "Analiză & Rapoarte",
+    url: "/analytics",
+    icon: TrendingUp,
+    description: "Rapoarte detaliate & KPI-uri",
+    badge: null
+  },
+  {
     id: "accounting",
     title: "Contabilitate",
     url: "/accounting",
     icon: Calculator,
     description: "Jurnal, balanță, TVA",
-    badge: null
+    badge: { text: "În curând", variant: "secondary" }
   },
   {
     id: "declarations",
@@ -72,15 +88,7 @@ const modules = [
     url: "/declarations",
     icon: FileCheck,
     description: "212, 301, 394 ANAF",
-    badge: "2"
-  },
-  {
-    id: "analytics",
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: BarChart3,
-    description: "Analytics & KPI-uri",
-    badge: null
+    badge: { text: "În curând", variant: "secondary" }
   },
   {
     id: "tax-optimization",
@@ -88,7 +96,7 @@ const modules = [
     url: "/tax-optimization",
     icon: TrendingUp,
     description: "Estimări, simulări",
-    badge: null
+    badge: { text: "În curând", variant: "secondary" }
   },
   {
     id: "compliance",
@@ -96,7 +104,7 @@ const modules = [
     url: "/compliance",
     icon: Shield,
     description: "Arhivare, backup",
-    badge: null
+    badge: { text: "În curând", variant: "secondary" }
   }
 ];
 
@@ -233,12 +241,21 @@ export function AppSidebar() {
                               {module.title}
                             </span>
                             {module.badge && (
-                              <Badge 
-                                variant="secondary" 
-                                className="ml-2 h-5 px-1.5 text-xs"
-                              >
-                                {module.badge}
-                              </Badge>
+                              typeof module.badge === 'string' ? (
+                                <Badge 
+                                  variant="secondary"
+                                  className="ml-2 h-5 px-1.5 text-xs"
+                                >
+                                  {module.badge}
+                                </Badge>
+                              ) : (
+                                <Badge 
+                                  variant="secondary"
+                                  className="ml-2 h-5 px-1.5 text-xs"
+                                >
+                                  {module.badge.text}
+                                </Badge>
+                              )
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground truncate">

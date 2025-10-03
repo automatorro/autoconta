@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
+import Analytics from "./pages/Analytics";
 import Documents from "./pages/Documents";
 import Reconciliation from "./pages/Reconciliation";
 import Settings from "./pages/Settings";
@@ -14,6 +15,7 @@ import AuthCallback from "./pages/AuthCallback";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BusinessManagement from "./pages/BusinessManagement";
+import Setup from "./pages/setup";
 import { useAppStore } from "@/store/useAppStore";
 import { useAuth } from "@/hooks/useAuth";
 import { debugSupabase } from '@/utils/debugSupabase';
@@ -25,14 +27,13 @@ debugSupabase();
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { authUser, user, setUser, setSession } = useAppStore();
-  const hasCompany = user.company !== null;
+  const { authUser, user, setupCompleted, setUser, setSession } = useAppStore();
   
   // Loading state pentru a evita redirecționarea prematură
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   
-  // Check if setup is completed by looking at the user profile data
-  const isSetupCompleted = hasCompany; // Verificăm dacă există companie
+  // Check if setup is completed
+  const isSetupCompleted = setupCompleted === true;
   
   // Initialize auth hook
   useAuth();
@@ -194,11 +195,20 @@ function AppRoutes() {
     );
   }
 
-  // If authenticated, show main app with all modules accessible
+  // If authenticated but setup not completed, redirect to setup
+  if (!isSetupCompleted) {
+    return (
+      <Routes>
+        <Route path="/setup" element={<Setup />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="*" element={<Navigate to="/setup" replace />} />
+      </Routes>
+    );
+  }
+
+  // If authenticated and setup completed, show main app with all modules accessible
   return (
     <Routes>
-
-      
       {/* Auth callback route for authenticated users */}
       <Route path="/auth/callback" element={<AuthCallback />} />
       
@@ -206,6 +216,7 @@ function AppRoutes() {
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="analytics" element={<Analytics />} />
         <Route path="settings" element={<Settings />} />
         <Route path="business" element={<BusinessManagement />} />
         <Route path="documents" element={<Documents />} />

@@ -13,8 +13,8 @@ interface AppStore extends AppState {
   setSession: (session: Session | null) => void;
   
   // Actions
-  setCompany: (company: Company) => void;
-  setUserData: (userData: { id: string; email: string; setupCompleted: boolean; company: Company; vehicles: Vehicle[]; drivers: Driver[] }) => void;
+  setCompany: (company: Company | null) => void;
+  setUserData: (userData: { id: string; email: string; setupCompleted: boolean; company: Company | null; vehicles: Vehicle[]; drivers: Driver[] }) => void;
   addVehicle: (vehicle: Vehicle) => void;
   updateVehicle: (id: string, updates: Partial<Vehicle>) => void;
   removeVehicle: (id: string) => void;
@@ -51,6 +51,7 @@ const initialState: AppState = {
     vehicles: [],
     drivers: []
   },
+  setupCompleted: false,
   documents: [],
   transactions: [],
   platformReports: [],
@@ -80,7 +81,8 @@ export const useAppStore = create<AppStore>()(
       
       // Company actions
       setCompany: (company) => set((state) => ({
-        user: { ...state.user, company }
+        user: { ...state.user, company },
+        setupCompleted: company !== null
       })),
       
       setUserData: (userData) => set(() => ({
@@ -88,7 +90,8 @@ export const useAppStore = create<AppStore>()(
           company: userData.company,
           vehicles: userData.vehicles,
           drivers: userData.drivers
-        }
+        },
+        setupCompleted: userData.setupCompleted
       })),
       
       // Vehicle actions

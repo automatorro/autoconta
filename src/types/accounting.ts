@@ -184,6 +184,7 @@ export interface AppState {
     vehicles: Vehicle[];
     drivers: Driver[];
   };
+  setupCompleted: boolean;
   documents: Document[];
   transactions: Transaction[];
   platformReports: PlatformReport[];
