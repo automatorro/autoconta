@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Building2, Car, Users, Download, Key, Save, Plus, Edit, Trash2, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Building2, Car, Users, Download, Key, Save, Plus, Edit, Trash2, AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Vehicle, Driver } from "@/types/accounting";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Vehicle, Driver, Company } from "@/types/accounting";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function BusinessManagement() {
   const { user, authUser, setCompany, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver } = useAppStore();
@@ -27,6 +31,24 @@ export default function BusinessManagement() {
   
   // State pentru gestionarea companiei
   const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
+  const [companyFormData, setCompanyFormData] = useState({
+    companyName: '',
+    companyType: 'PFA',
+    cif: '',
+    cnp: '',
+    vatPayer: false,
+    address: {
+      street: '',
+      city: '',
+      county: '',
+      postalCode: ''
+    },
+    contact: {
+      phone: '',
+      email: ''
+    }
+  });
+  const [isSavingCompany, setIsSavingCompany] = useState(false);
   
   // State pentru gestionarea vehiculelor
   const [isVehicleDialogOpen, setIsVehicleDialogOpen] = useState(false);
@@ -36,8 +58,109 @@ export default function BusinessManagement() {
   const [isDriverDialogOpen, setIsDriverDialogOpen] = useState(false);
   const [currentDriver, setCurrentDriver] = useState<Driver | null>(null);
   
-  // Note: Users can access BusinessManagement directly without forced setup redirect
-  // Setup is available as a separate route if needed
+  // State pentru confirmări ștergere
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'vehicle' | 'driver', id: string } | null>(null);
+
+  // Load company data when editing
+  useEffect(() => {
+    if (isCompanyDialogOpen && user.company) {
+      setCompanyFormData({
+        companyName: user.company.name,
+        companyType: user.company.type,
+        cif: user.company.cif,
+        cnp: user.company.cnp || '',
+        vatPayer: user.company.vatPayer,
+        address: user.company.address,
+        contact: user.company.contact
+      });
+    }
+  }, [isCompanyDialogOpen, user.company]);
+
+  // Funcții pentru gestionarea companiei
+  const openAddCompanyDialog = () => {
+    setCompanyFormData({
+      companyName: '',
+      companyType: 'PFA',
+      cif: '',
+      cnp: '',
+      vatPayer: false,
+      address: { street: '', city: '', county: '', postalCode: '' },
+      contact: { phone: '', email: authUser?.email || '' }
+    });
+    setIsCompanyDialogOpen(true);
+  };
+
+  const openEditCompanyDialog = () => {
+    setIsCompanyDialogOpen(true);
+  };
+
+  const handleSaveCompany = async () => {
+    if (!authUser || !companyFormData.companyName || !companyFormData.cif) {
+      toast({
+        title: "Validare",
+        description: "Te rugăm să completezi toate câmpurile obligatorii.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSavingCompany(true);
+    try {
+      // Salvare în Supabase
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          user_id: authUser.id,
+          company_name: companyFormData.companyName,
+          company_type: companyFormData.companyType,
+          cif: companyFormData.cif,
+          cnp: companyFormData.cnp || null,
+          vat_payer: companyFormData.vatPayer,
+          address_street: companyFormData.address.street,
+          address_city: companyFormData.address.city,
+          address_county: companyFormData.address.county,
+          address_postal_code: companyFormData.address.postalCode,
+          contact_phone: companyFormData.contact.phone,
+          contact_email: companyFormData.contact.email,
+          setup_completed: true
+        });
+
+      if (error) throw error;
+
+      // Actualizare store local
+      const company: Company = {
+        id: authUser.id,
+        name: companyFormData.companyName,
+        cif: companyFormData.cif,
+        cnp: companyFormData.cnp || undefined,
+        type: companyFormData.companyType as 'PFA' | 'SRL',
+        vatPayer: companyFormData.vatPayer,
+        address: companyFormData.address,
+        contact: companyFormData.contact,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      setCompany(company);
+
+      toast({
+        title: "✓ Succes",
+        description: "Datele companiei au fost salvate cu succes.",
+      });
+
+      setIsCompanyDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving company:', error);
+      toast({
+        title: "✗ Eroare",
+        description: "Nu s-au putut salva datele companiei.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingCompany(false);
+    }
+  };
   
   // Funcții pentru gestionarea vehiculelor
   const openAddVehicleDialog = () => {
@@ -50,17 +173,26 @@ export default function BusinessManagement() {
     setIsVehicleDialogOpen(true);
   };
   
-  const handleDeleteVehicle = async (vehicleId: string) => {
+  const confirmDeleteVehicle = (vehicleId: string) => {
+    setDeleteTarget({ type: 'vehicle', id: vehicleId });
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteVehicle = async () => {
+    if (!deleteTarget || deleteTarget.type !== 'vehicle') return;
+    
     try {
-      await removeVehicle(vehicleId);
+      await removeVehicle(deleteTarget.id);
       toast({
-        title: "Vehicul șters",
+        title: "✓ Vehicul șters",
         description: "Vehiculul a fost șters cu succes.",
       });
+      setDeleteConfirmOpen(false);
+      setDeleteTarget(null);
     } catch (error) {
       console.error("Eroare la ștergerea vehiculului:", error);
       toast({
-        title: "Eroare",
+        title: "✗ Eroare",
         description: "A apărut o eroare la ștergerea vehiculului.",
         variant: "destructive",
       });
@@ -78,17 +210,26 @@ export default function BusinessManagement() {
     setIsDriverDialogOpen(true);
   };
   
-  const handleDeleteDriver = async (driverId: string) => {
+  const confirmDeleteDriver = (driverId: string) => {
+    setDeleteTarget({ type: 'driver', id: driverId });
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteDriver = async () => {
+    if (!deleteTarget || deleteTarget.type !== 'driver') return;
+    
     try {
-      await removeDriver(driverId);
+      await removeDriver(deleteTarget.id);
       toast({
-        title: "Șofer șters",
+        title: "✓ Șofer șters",
         description: "Șoferul a fost șters cu succes.",
       });
+      setDeleteConfirmOpen(false);
+      setDeleteTarget(null);
     } catch (error) {
       console.error("Eroare la ștergerea șoferului:", error);
       toast({
-        title: "Eroare",
+        title: "✗ Eroare",
         description: "A apărut o eroare la ștergerea șoferului.",
         variant: "destructive",
       });
@@ -110,7 +251,7 @@ export default function BusinessManagement() {
       
       setIsVehicleDialogOpen(false);
       toast({
-        title: currentVehicle.id ? "Vehicul actualizat" : "Vehicul adăugat",
+        title: currentVehicle.id ? "✓ Vehicul actualizat" : "✓ Vehicul adăugat",
         description: "Vehiculul a fost salvat cu succes.",
       });
     } catch (error) {
@@ -138,7 +279,7 @@ export default function BusinessManagement() {
       
       setIsDriverDialogOpen(false);
       toast({
-        title: currentDriver.id ? "Șofer actualizat" : "Șofer adăugat",
+        title: currentDriver.id ? "✓ Șofer actualizat" : "✓ Șofer adăugat",
         description: "Șoferul a fost salvat cu succes.",
       });
     } catch (error) {
@@ -224,7 +365,7 @@ export default function BusinessManagement() {
                       <Download className="mr-2 h-4 w-4" />
                       Exportă date
                     </Button>
-                    <Button onClick={() => navigate('/settings')}>
+                    <Button onClick={openEditCompanyDialog}>
                       <Edit className="mr-2 h-4 w-4" />
                       Editează
                     </Button>
@@ -235,7 +376,7 @@ export default function BusinessManagement() {
                   <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
                   <h3 className="mt-2 text-lg font-medium">Nu există date despre companie</h3>
                   <p className="text-muted-foreground">Adaugă informațiile companiei tale pentru a continua.</p>
-                  <Button className="mt-4" onClick={() => navigate('/settings')}>
+                  <Button className="mt-4" onClick={openAddCompanyDialog}>
                     <Plus className="mr-2 h-4 w-4" />
                     Adaugă companie
                   </Button>
@@ -282,7 +423,7 @@ export default function BusinessManagement() {
                             variant="outline" 
                             size="sm" 
                             className="text-destructive"
-                            onClick={() => handleDeleteVehicle(vehicle.id)}
+                            onClick={() => confirmDeleteVehicle(vehicle.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -344,7 +485,7 @@ export default function BusinessManagement() {
                             variant="outline" 
                             size="sm" 
                             className="text-destructive"
-                            onClick={() => handleDeleteDriver(driver.id)}
+                            onClick={() => confirmDeleteDriver(driver.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -559,6 +700,217 @@ export default function BusinessManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog pentru adăugare/editare companie */}
+      <Dialog open={isCompanyDialogOpen} onOpenChange={setIsCompanyDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{user.company ? "Editează companie" : "Adaugă companie"}</DialogTitle>
+            <DialogDescription>
+              {user.company ? "Modifică detaliile companiei" : "Adaugă informațiile companiei tale"}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Informații generale */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Informații generale</h3>
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="company-name">Denumire companie *</Label>
+                  <Input
+                    id="company-name"
+                    value={companyFormData.companyName}
+                    onChange={(e) => setCompanyFormData({...companyFormData, companyName: e.target.value})}
+                    placeholder="Ex: SC Transport SRL"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cif">CIF/CUI *</Label>
+                  <Input
+                    id="cif"
+                    value={companyFormData.cif}
+                    onChange={(e) => setCompanyFormData({...companyFormData, cif: e.target.value})}
+                    placeholder="Ex: RO12345678"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Tip companie *</Label>
+                  <RadioGroup
+                    value={companyFormData.companyType}
+                    onValueChange={(value) => setCompanyFormData({...companyFormData, companyType: value})}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="PFA" id="edit-pfa" />
+                      <Label htmlFor="edit-pfa">PFA</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="SRL" id="edit-srl" />
+                      <Label htmlFor="edit-srl">SRL</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                {companyFormData.companyType === 'PFA' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cnp">CNP</Label>
+                    <Input
+                      id="cnp"
+                      value={companyFormData.cnp}
+                      onChange={(e) => setCompanyFormData({...companyFormData, cnp: e.target.value})}
+                      placeholder="Ex: 1234567890123"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-vat-payer"
+                  checked={companyFormData.vatPayer}
+                  onCheckedChange={(checked) => 
+                    setCompanyFormData({...companyFormData, vatPayer: checked as boolean})
+                  }
+                />
+                <Label htmlFor="edit-vat-payer">Plătitor de TVA</Label>
+              </div>
+            </div>
+            
+            {/* Adresă */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Adresă</h3>
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="street">Stradă</Label>
+                  <Input
+                    id="street"
+                    value={companyFormData.address.street}
+                    onChange={(e) => setCompanyFormData({
+                      ...companyFormData, 
+                      address: {...companyFormData.address, street: e.target.value}
+                    })}
+                    placeholder="Ex: Str. Principală nr. 123"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="city">Oraș</Label>
+                  <Input
+                    id="city"
+                    value={companyFormData.address.city}
+                    onChange={(e) => setCompanyFormData({
+                      ...companyFormData, 
+                      address: {...companyFormData.address, city: e.target.value}
+                    })}
+                    placeholder="Ex: București"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="county">Județ</Label>
+                  <Input
+                    id="county"
+                    value={companyFormData.address.county}
+                    onChange={(e) => setCompanyFormData({
+                      ...companyFormData, 
+                      address: {...companyFormData.address, county: e.target.value}
+                    })}
+                    placeholder="Ex: Ilfov"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="postal-code">Cod poștal</Label>
+                  <Input
+                    id="postal-code"
+                    value={companyFormData.address.postalCode}
+                    onChange={(e) => setCompanyFormData({
+                      ...companyFormData, 
+                      address: {...companyFormData.address, postalCode: e.target.value}
+                    })}
+                    placeholder="Ex: 077042"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Contact */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Contact</h3>
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefon</Label>
+                  <Input
+                    id="phone"
+                    value={companyFormData.contact.phone}
+                    onChange={(e) => setCompanyFormData({
+                      ...companyFormData, 
+                      contact: {...companyFormData.contact, phone: e.target.value}
+                    })}
+                    placeholder="Ex: +40712345678"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={companyFormData.contact.email}
+                    onChange={(e) => setCompanyFormData({
+                      ...companyFormData, 
+                      contact: {...companyFormData.contact, email: e.target.value}
+                    })}
+                    placeholder="Ex: contact@firma.ro"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCompanyDialogOpen(false)} disabled={isSavingCompany}>
+              Anulează
+            </Button>
+            <Button onClick={handleSaveCompany} disabled={isSavingCompany || !companyFormData.companyName || !companyFormData.cif}>
+              {isSavingCompany ? "Se salvează..." : "Salvează"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Alert Dialog pentru confirmări de ștergere */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ești sigur?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Această acțiune este permanentă și nu poate fi anulată. 
+              {deleteTarget?.type === 'vehicle' ? ' Vehiculul ' : ' Șoferul '}
+              va fi șters definitiv din baza de date.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={deleteTarget?.type === 'vehicle' ? handleDeleteVehicle : handleDeleteDriver}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Șterge definitiv
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

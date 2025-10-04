@@ -16,6 +16,10 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BusinessManagement from "./pages/BusinessManagement";
 import Setup from "./pages/setup";
+import Accounting from "./pages/Accounting";
+import Declarations from "./pages/Declarations";
+import TaxOptimization from "./pages/TaxOptimization";
+import Compliance from "./pages/Compliance";
 import { useAppStore } from "@/store/useAppStore";
 import { useAuth } from "@/hooks/useAuth";
 import { debugSupabase } from '@/utils/debugSupabase';
@@ -221,10 +225,10 @@ function AppRoutes() {
         <Route path="business" element={<BusinessManagement />} />
         <Route path="documents" element={<Documents />} />
         <Route path="reconciliation" element={<Reconciliation />} />
-        <Route path="accounting" element={<div className="p-6"><h1 className="text-2xl font-bold">Contabilitate</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
-        <Route path="declarations" element={<div className="p-6"><h1 className="text-2xl font-bold">Declarații</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
-        <Route path="tax-optimization" element={<div className="p-6"><h1 className="text-2xl font-bold">Optimizare Fiscală</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
-        <Route path="compliance" element={<div className="p-6"><h1 className="text-2xl font-bold">Compliance</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
+        <Route path="accounting" element={<Accounting />} />
+        <Route path="declarations" element={<Declarations />} />
+        <Route path="tax-optimization" element={<TaxOptimization />} />
+        <Route path="compliance" element={<Compliance />} />
         <Route path="alerts" element={<div className="p-6"><h1 className="text-2xl font-bold">Notificări</h1><p className="text-muted-foreground">Funcționalitatea va fi disponibilă în curând.</p></div>} />
       </Route>
       

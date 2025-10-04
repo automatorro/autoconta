@@ -2,6 +2,7 @@ import { Bell, User, ChevronDown, AlertTriangle, Settings, LogOut } from "lucide
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,24 +89,24 @@ export function AppHeader({ className }: AppHeaderProps) {
       <div className="flex items-center gap-4">
         {location.pathname !== '/' && <SidebarTrigger className="h-8 w-8" />}
         
-        <div
-          role="link"
-          tabIndex={0}
-          onClick={() => navigate("/")}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              navigate("/");
-            }
-          }}
-          className="no-underline hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/50 rounded-sm"
-        >
-          <h1 className="text-lg font-semibold text-foreground">
-            Dashboard Contabilitate
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {currentMonth} • Raportare lunară
-          </p>
+        <div className="flex flex-col gap-1">
+          <div
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate("/")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate("/");
+              }
+            }}
+            className="no-underline hover:opacity-90 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/50 rounded-sm"
+          >
+            <h1 className="text-lg font-semibold text-foreground">
+              Dashboard Contabilitate
+            </h1>
+          </div>
+          <Breadcrumbs />
         </div>
       </div>
 
