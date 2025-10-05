@@ -104,6 +104,8 @@ class AnafService {
    */
   public async getCompanyData(cif: string, date?: string): Promise<AnafCompanyData | null> {
     try {
+      console.log('🔍 Input CIF received:', cif, 'Type:', typeof cif);
+      
       if (!this.validateCif(cif)) {
         throw new Error('CIF invalid');
       }
@@ -111,7 +113,8 @@ class AnafService {
       const normalizedCif = this.normalizeCif(cif);
       const checkDate = date || new Date().toISOString().split('T')[0];
 
-      console.log('🔍 ANAF Request via Edge Function:', { cui: normalizedCif, date: checkDate });
+      console.log('🔍 Normalized CIF:', normalizedCif, 'Date:', checkDate);
+      console.log('📦 Request body being sent:', JSON.stringify({ cui: normalizedCif }));
 
       // Apel Edge Function prin Supabase client
       const response = await fetch(
