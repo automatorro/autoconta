@@ -110,46 +110,27 @@ class AnafService {
 
       const normalizedCif = this.normalizeCif(cif);
       const checkDate = date || new Date().toISOString().split('T')[0];
-      
-      const requestBody = [
-        {
-          cui: parseInt(normalizedCif),
-          data: checkDate
-        }
-      ];
 
-      console.log('🔍 ANAF API Request:', { cif: normalizedCif, date: checkDate });
+      console.log('🔍 ANAF Request via Edge Function:', { cif: normalizedCif, date: checkDate });
 
-      let response;
-      try {
-        // Încearcă mai întâi proxy-ul local
-        response = await fetch(this.baseUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
-        });
-      } catch (proxyError) {
-        console.warn('⚠️ Proxy not available, trying direct API:', proxyError.message);
-        // Fallback la API-ul direct (va avea probleme CORS în browser)
-        response = await fetch(this.fallbackUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
-        });
+      // Import supabase client
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        'https://ytjdvoyyiapkyzjrjllp.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0amR2b3l5aWFwa3l6anJqbGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzYxNDUsImV4cCI6MjA3Mjc1MjE0NX0._Er5RxJmtzYMpXMU15Pi9M-xSjJwk1gORqrZwR8nf2g'
+      );
+
+      // Apel Edge Function prin Supabase client
+      const { data, error } = await supabase.functions.invoke('anaf-search', {
+        body: { cui: normalizedCif }
+      });
+
+      if (error) {
+        console.error('❌ Edge Function Error:', error);
+        throw new Error(`Eroare la interogarea ANAF: ${error.message}`);
       }
 
-      if (!response.ok) {
-        throw new Error(`ANAF API Error: ${response.status} ${response.statusText}`);
-      }
-
-      const data: AnafResponse = await response.json();
-      console.log('📊 ANAF API Response:', data);
+      console.log('📊 ANAF Response:', data);
 
       if (data.found && data.found.length > 0) {
         return data.found[0];
