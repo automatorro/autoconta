@@ -111,24 +111,27 @@ class AnafService {
       const normalizedCif = this.normalizeCif(cif);
       const checkDate = date || new Date().toISOString().split('T')[0];
 
-      console.log('🔍 ANAF Request via Edge Function:', { cif: normalizedCif, date: checkDate });
-
-      // Import supabase client
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        'https://ytjdvoyyiapkyzjrjllp.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0amR2b3l5aWFwa3l6anJqbGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzYxNDUsImV4cCI6MjA3Mjc1MjE0NX0._Er5RxJmtzYMpXMU15Pi9M-xSjJwk1gORqrZwR8nf2g'
-      );
+      console.log('🔍 ANAF Request via Edge Function:', { cui: normalizedCif, date: checkDate });
 
       // Apel Edge Function prin Supabase client
-      const { data, error } = await supabase.functions.invoke('anaf-search', {
-        body: { cui: normalizedCif }
-      });
+      const response = await fetch(
+        'https://ytjdvoyyiapkyzjrjllp.supabase.co/functions/v1/anaf-search',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0amR2b3l5aWFwa3l6anJqbGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzYxNDUsImV4cCI6MjA3Mjc1MjE0NX0._Er5RxJmtzYMpXMU15Pi9M-xSjJwk1gORqrZwR8nf2g`
+          },
+          body: JSON.stringify({ cui: normalizedCif })
+        }
+      );
 
-      if (error) {
-        console.error('❌ Edge Function Error:', error);
-        throw new Error(`Eroare la interogarea ANAF: ${error.message}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Edge Function Error: ${response.status} - ${errorText}`);
       }
+
+      const data = await response.json();
 
       console.log('📊 ANAF Response:', data);
 

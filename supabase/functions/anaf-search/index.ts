@@ -10,8 +10,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { cui } = await req.json()
+    const body = await req.json()
+    console.log('📦 Received body:', JSON.stringify(body))
+    
+    const cui = body.cui || body.CUI
     const dataCurenta = new Date().toISOString().split('T')[0]
+
+    if (!cui) {
+      throw new Error('CUI lipsește din request')
+    }
 
     console.log('🔍 ANAF Edge Function - Searching CUI:', cui)
 
