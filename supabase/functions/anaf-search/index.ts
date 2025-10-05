@@ -10,16 +10,30 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json()
-    console.log('📦 Received body:', JSON.stringify(body))
+    const contentType = req.headers.get('content-type')
+    console.log('📦 Content-Type:', contentType)
+    
+    const bodyText = await req.text()
+    console.log('📦 Raw body received:', bodyText)
+    
+    let body
+    try {
+      body = JSON.parse(bodyText)
+    } catch (e) {
+      console.error('❌ JSON parse error:', e.message)
+      throw new Error('Invalid JSON in request body')
+    }
+    
+    console.log('📦 Parsed body:', JSON.stringify(body))
     
     const cui = body.cui || body.CUI
-    const dataCurenta = new Date().toISOString().split('T')[0]
-
+    
     if (!cui) {
+      console.error('❌ CUI missing. Body keys:', Object.keys(body))
       throw new Error('CUI lipsește din request')
     }
 
+    const dataCurenta = new Date().toISOString().split('T')[0]
     console.log('🔍 ANAF Edge Function - Searching CUI:', cui)
 
     const response = await fetch(
