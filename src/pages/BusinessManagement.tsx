@@ -109,30 +109,85 @@ export default function BusinessManagement() {
 
     setIsSavingCompany(true);
     try {
-      // Salvare în Supabase
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: authUser.id,
-          company_name: companyFormData.companyName,
-          company_type: companyFormData.companyType,
-          cif: companyFormData.cif,
-          cnp: companyFormData.cnp || null,
-          vat_payer: companyFormData.vatPayer,
-          address_street: companyFormData.address.street,
-          address_city: companyFormData.address.city,
-          address_county: companyFormData.address.county,
-          address_postal_code: companyFormData.address.postalCode,
-          contact_phone: companyFormData.contact.phone,
-          contact_email: companyFormData.contact.email,
-          setup_completed: true
-        });
+      console.log('💾 Saving company data:', companyFormData);
+      
+      // Verifică dacă compania există deja
+      const { data: existingCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('cif', companyFormData.cif)
+        .single();
 
-      if (error) throw error;
+      let companyId: string;
+
+      if (existingCompany) {
+        // Actualizează compania existentă
+        const { data: updatedCompany, error: updateError } = await supabase
+          .from('companies')
+          .update({
+            company_name: companyFormData.companyName,
+            company_type: companyFormData.companyType,
+            cnp: companyFormData.cnp || null,
+            vat_payer: companyFormData.vatPayer,
+            address_street: companyFormData.address.street || null,
+            address_city: companyFormData.address.city || null,
+            address_county: companyFormData.address.county || null,
+            address_postal_code: companyFormData.address.postalCode || null,
+            contact_phone: companyFormData.contact.phone || null,
+            contact_email: companyFormData.contact.email || authUser.email,
+          })
+          .eq('id', existingCompany.id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+        companyId = existingCompany.id;
+        console.log('✅ Company updated:', updatedCompany);
+      } else {
+        // Creează companie nouă
+        const { data: newCompany, error: createError } = await supabase
+          .from('companies')
+          .insert({
+            company_name: companyFormData.companyName,
+            company_type: companyFormData.companyType,
+            cif: companyFormData.cif,
+            cnp: companyFormData.cnp || null,
+            vat_payer: companyFormData.vatPayer,
+            address_street: companyFormData.address.street || null,
+            address_city: companyFormData.address.city || null,
+            address_county: companyFormData.address.county || null,
+            address_postal_code: companyFormData.address.postalCode || null,
+            contact_phone: companyFormData.contact.phone || null,
+            contact_email: companyFormData.contact.email || authUser.email,
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        companyId = newCompany.id;
+        console.log('✅ Company created:', newCompany);
+
+        // Creează relația user-company dacă nu există
+        const { error: accessError } = await supabase
+          .from('user_company_access')
+          .upsert({
+            user_id: authUser.id,
+            company_id: companyId,
+            role: 'owner',
+            is_default: true
+          }, {
+            onConflict: 'user_id,company_id'
+          });
+
+        if (accessError) {
+          console.error('❌ Access creation error:', accessError);
+          throw accessError;
+        }
+      }
 
       // Actualizare store local
       const company: Company = {
-        id: authUser.id,
+        id: companyId,
         name: companyFormData.companyName,
         cif: companyFormData.cif,
         cnp: companyFormData.cnp || undefined,

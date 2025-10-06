@@ -49,14 +49,19 @@ const AuthCallback = () => {
           // Așteaptă ca authUser să fie setat în store
           const waitForAuthUser = () => {
             const checkAuthUser = () => {
-              const { authUser } = useAppStore.getState();
+              const { authUser, setupCompleted } = useAppStore.getState();
               if (authUser) {
-                console.log('✅ AuthUser set in store, navigating to dashboard');
+                console.log('✅ AuthUser set in store. setupCompleted =', setupCompleted);
                 toast({
                   title: "Autentificare reușită",
                   description: "Bun venit în AutoConta!",
                 });
-                navigate('/dashboard');
+                // Decide next route based on setup status
+                if (setupCompleted) {
+                  navigate('/dashboard');
+                } else {
+                  navigate('/setup');
+                }
               } else {
                 console.log('⏳ Waiting for authUser to be set...');
                 setTimeout(checkAuthUser, 100);

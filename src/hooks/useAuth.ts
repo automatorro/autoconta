@@ -13,7 +13,7 @@ export function useAuth() {
     console.log('🆕 Creating new user profile for userId:', userId, 'email:', email);
     try {
       const { data: newProfile, error: createError } = await supabase
-        .from('user_profiles' as any)
+        .from('user_profiles')
         .insert({
           user_id: userId,
           contact_email: email,
@@ -42,13 +42,13 @@ export function useAuth() {
   const loadUserData = useCallback(async (userId: string, userEmail?: string) => {
     console.log('🔄 Loading user data for userId:', userId);
     try {
-      // Load user profile - use any to bypass TypeScript restrictions
+      // Load user profile (contains setup_completed and contact_email)
       const { data: profile, error: profileError } = await supabase
-        .from('user_profiles' as any)
+        .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
-      
+        .maybeSingle();
+
       console.log('📊 Profile data:', profile);
       console.log('❌ Profile error:', profileError);
 
@@ -57,12 +57,11 @@ export function useAuth() {
         console.log('🆕 No profile found, creating new profile...');
         const newProfile = await createUserProfile(userId, userEmail);
         if (newProfile) {
-          // Set basic user data with new profile
           const userData = {
             id: userId,
             email: userEmail,
             setupCompleted: false,
-            company: null,
+            companies: [],
             vehicles: [],
             drivers: []
           };
@@ -72,49 +71,72 @@ export function useAuth() {
         }
       }
 
-      if (profile && (profile as any).setup_completed) {
-        console.log('✅ Profile found and setup completed, loading company data...');
-        // Create company object from profile
-        const company: Company = {
-          id: (profile as any).id,
-          name: (profile as any).company_name || '',
-          cif: (profile as any).cif || '',
-          cnp: (profile as any).cnp || '',
-          type: ((profile as any).company_type as 'PFA' | 'SRL') || 'PFA',
-          vatPayer: (profile as any).vat_payer || false,
-          vatIntraCommunity: (profile as any).vat_intra_community || '',
-          address: {
-            street: (profile as any).address_street || '',
-            city: (profile as any).address_city || '',
-            county: (profile as any).address_county || '',
-            postalCode: (profile as any).address_postal_code || ''
-          },
-          contact: {
-            phone: (profile as any).contact_phone || '',
-            email: (profile as any).contact_email || ''
-          },
-          createdAt: (profile as any).created_at ? new Date((profile as any).created_at) : new Date(),
-          updatedAt: (profile as any).updated_at ? new Date((profile as any).updated_at) : new Date()
-        };
-        console.log('🏢 Setting company:', company);
-        setCompany(company);
-        
-        // Set user with profile data to persist setup_completed status
-        const userData = {
-          id: (profile as any).user_id,
-          email: (profile as any).contact_email || '',
-          setupCompleted: (profile as any).setup_completed || false,
-          company: company,
-          vehicles: [],
-          drivers: []
-        };
-        console.log('👤 Setting user data:', userData);
+      const setupCompleted = !!(profile as { setup_completed?: boolean })?.setup_completed;
 
-        // Load vehicles - use any to bypass TypeScript restrictions
+      // Find the default company for the user
+      const { data: access, error: accessError } = await supabase
+        .from('user_company_access')
+        .select('company_id, role, is_default')
+        .eq('user_id', userId)
+        .order('is_default', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (accessError) {
+        console.warn('⚠️ Could not load user_company_access:', accessError);
+      }
+
+      let companies: Company[] = [];
+      let activeCompanyId: string | null = null;
+
+      if (access?.company_id) {
+        const { data: companyRow, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', access.company_id)
+          .maybeSingle();
+
+        if (companyError) {
+          console.error('❌ Error loading company:', companyError);
+        } else if (companyRow) {
+          const company: Company = {
+            id: companyRow.id,
+            name: companyRow.company_name || '',
+            cif: companyRow.cif || '',
+            cnp: companyRow.cnp || undefined,
+            type: (companyRow.company_type as 'PFA' | 'SRL') || 'PFA',
+            vatPayer: !!companyRow.vat_payer,
+            vatIntraCommunity: (profile as { vat_intra_community?: string })?.vat_intra_community || '',
+            address: {
+              street: companyRow.address_street || '',
+              city: companyRow.address_city || '',
+              county: companyRow.address_county || '',
+              postalCode: companyRow.address_postal_code || ''
+            },
+            contact: {
+              phone: companyRow.contact_phone || '',
+              email: companyRow.contact_email || (profile as { contact_email?: string })?.contact_email || ''
+            },
+            createdAt: companyRow.created_at ? new Date(companyRow.created_at) : new Date(),
+
+
+
+            updatedAt: companyRow.updated_at ? new Date(companyRow.updated_at) : new Date()
+          };
+
+          companies = [company];
+          activeCompanyId = company.id;
+          setCompany(company); // legacy setter for backward compatibility in UI
+        }
+      }
+
+      // Load vehicles for the active company
+      const vehiclesForStore: Vehicle[] = [];
+      if (activeCompanyId) {
         const { data: vehicles } = await supabase
           .from('vehicles' as any)
           .select('*')
-          .eq('user_id', userId);
+          .eq('company_id', activeCompanyId);
 
         if (vehicles) {
           console.log('🚗 Loading vehicles data:', vehicles.length, 'vehicles found');
@@ -142,15 +164,18 @@ export function useAuth() {
               updatedAt: vehicle.updated_at ? new Date(vehicle.updated_at) : new Date()
             };
             addVehicle(vehicleData);
-            userData.vehicles.push(vehicleData);
+            vehiclesForStore.push(vehicleData);
           });
         }
+      }
 
-        // Load drivers - use any to bypass TypeScript restrictions
+      // Load drivers for the active company
+      const driversForStore: Driver[] = [];
+      if (activeCompanyId) {
         const { data: drivers } = await supabase
           .from('drivers' as any)
           .select('*')
-          .eq('user_id', userId);
+          .eq('company_id', activeCompanyId);
 
         if (drivers) {
           console.log('👨‍✈️ Loading drivers data:', drivers.length, 'drivers found');
@@ -177,16 +202,22 @@ export function useAuth() {
               updatedAt: driver.updated_at ? new Date(driver.updated_at) : new Date()
             };
             addDriver(driverData);
-            userData.drivers.push(driverData);
+            driversForStore.push(driverData);
           });
         }
-        
-        // Finally set the complete user data with setup_completed status
-        console.log('✅ Setting complete user data with setup status:', userData.setupCompleted);
-        setUserData(userData);
-      } else {
-        console.log('⚠️ No profile found or setup not completed');
       }
+
+      // Finally set the complete user data
+      const userData = {
+        id: userId,
+        email: (profile as any)?.contact_email || userEmail || '',
+        setupCompleted: setupCompleted,
+        companies,
+        vehicles: vehiclesForStore,
+        drivers: driversForStore
+      };
+      console.log('✅ Setting complete user data. Setup completed:', setupCompleted);
+      setUserData(userData);
     } catch (error) {
       console.error('❌ Error loading user data:', error);
     }
@@ -237,7 +268,7 @@ export function useAuth() {
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setSession]);
+  }, [setUser, setSession, loadUserData, setCompany, setUserData]);
 
   const signUp = async (email: string, password: string) => {
     // Use proper redirect URLs based on environment

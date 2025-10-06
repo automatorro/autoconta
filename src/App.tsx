@@ -194,6 +194,8 @@ function AppRoutes() {
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        {/* Evită 404 tranzitoriu când callback încearcă /setup înainte ca authUser să fie setat */}
+        <Route path="/setup" element={<Navigate to="/auth" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
@@ -215,6 +217,8 @@ function AppRoutes() {
     <Routes>
       {/* Auth callback route for authenticated users */}
       <Route path="/auth/callback" element={<AuthCallback />} />
+      {/* Prevent 404 if someone hits /setup after completion */}
+      <Route path="/setup" element={<Navigate to="/dashboard" replace />} />
       
       {/* Main app layout with all modules */}
       <Route path="/" element={<AppLayout />}>
