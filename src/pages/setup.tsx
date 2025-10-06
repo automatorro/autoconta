@@ -143,10 +143,10 @@ export default function Setup() {
       // Actualizează profilul utilizatorului cu setup_completed = true
       const { error } = await supabase
         .from('user_profiles')
-        .upsert({
-          user_id: authUser.id,
+        .update({
           setup_completed: true
-        });
+        })
+        .eq('user_id', authUser.id);
         
       if (error) throw error;
       
