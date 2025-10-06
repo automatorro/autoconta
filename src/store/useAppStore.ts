@@ -12,22 +12,40 @@ interface AppStore extends AppState {
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   
-  // Actions
+  // Company actions
+  setCompanies: (companies: Company[]) => void;
+  addCompany: (company: Company) => void;
+  updateCompany: (id: string, updates: Partial<Company>) => void;
+  removeCompany: (id: string) => void;
+  setActiveCompanyId: (companyId: string | null) => void;
+  getActiveCompany: () => Company | null;
+  
+  // Legacy support (backward compatibility)
   setCompany: (company: Company | null) => void;
-  setUserData: (userData: { id: string; email: string; setupCompleted: boolean; company: Company | null; vehicles: Vehicle[]; drivers: Driver[] }) => void;
+  setUserData: (userData: { id: string; email: string; setupCompleted: boolean; company?: Company | null; companies?: Company[]; vehicles: Vehicle[]; drivers: Driver[] }) => void;
+  
+  // Vehicle actions
   addVehicle: (vehicle: Vehicle) => void;
   updateVehicle: (id: string, updates: Partial<Vehicle>) => void;
   removeVehicle: (id: string) => void;
+  
+  // Driver actions
   addDriver: (driver: Driver) => void;
   updateDriver: (id: string, updates: Partial<Driver>) => void;
   removeDriver: (id: string) => void;
+  
+  // Document actions
   addDocument: (document: Document) => void;
   updateDocument: (id: string, updates: Partial<Document>) => void;
   removeDocument: (id: string) => void;
   setDocuments: (documents: Document[]) => void;
   getDocumentsByCategory: (category?: string) => Document[];
+  
+  // Alert actions
   addAlert: (alert: Alert) => void;
   dismissAlert: (id: string) => void;
+  
+  // Settings actions
   updateSettings: (settings: Partial<AppState['settings']>) => void;
   
   // Computed values
@@ -47,7 +65,8 @@ interface AppStore extends AppState {
 
 const initialState: AppState = {
   user: {
-    company: null,
+    companies: [],
+    activeCompanyId: null,
     vehicles: [],
     drivers: []
   },
@@ -80,14 +99,59 @@ export const useAppStore = create<AppStore>()(
       setSession: (session) => set(() => ({ session })),
       
       // Company actions
+      setCompanies: (companies) => set((state) => ({
+        user: { ...state.user, companies }
+      })),
+      
+      addCompany: (company) => set((state) => ({
+        user: {
+          ...state.user,
+          companies: [...state.user.companies, company],
+          activeCompanyId: state.user.activeCompanyId || company.id
+        },
+        setupCompleted: true
+      })),
+      
+      updateCompany: (id, updates) => set((state) => ({
+        user: {
+          ...state.user,
+          companies: state.user.companies.map(company =>
+            company.id === id ? { ...company, ...updates } : company
+          )
+        }
+      })),
+      
+      removeCompany: (id) => set((state) => ({
+        user: {
+          ...state.user,
+          companies: state.user.companies.filter(company => company.id !== id),
+          activeCompanyId: state.user.activeCompanyId === id ? null : state.user.activeCompanyId
+        }
+      })),
+      
+      setActiveCompanyId: (companyId) => set((state) => ({
+        user: { ...state.user, activeCompanyId: companyId }
+      })),
+      
+      getActiveCompany: () => {
+        const state = get();
+        return state.user.companies.find(c => c.id === state.user.activeCompanyId) || null;
+      },
+      
+      // Legacy support (backward compatibility)
       setCompany: (company) => set((state) => ({
-        user: { ...state.user, company },
+        user: {
+          ...state.user,
+          companies: company ? [company] : [],
+          activeCompanyId: company?.id || null
+        },
         setupCompleted: company !== null
       })),
       
       setUserData: (userData) => set(() => ({
         user: {
-          company: userData.company,
+          companies: userData.companies || (userData.company ? [userData.company] : []),
+          activeCompanyId: userData.companies?.[0]?.id || userData.company?.id || null,
           vehicles: userData.vehicles,
           drivers: userData.drivers
         },

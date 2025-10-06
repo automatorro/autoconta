@@ -178,9 +178,19 @@ export type ExpenseCategory =
   | 'comisioane'
   | 'altele';
 
+export interface UserCompanyAccess {
+  id: string;
+  userId: string;
+  companyId: string;
+  role: 'owner' | 'accountant' | 'viewer';
+  isDefault: boolean;
+  createdAt: Date;
+}
+
 export interface AppState {
   user: {
-    company: Company | null;
+    companies: Company[];
+    activeCompanyId: string | null;
     vehicles: Vehicle[];
     drivers: Driver[];
   };

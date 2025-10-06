@@ -22,11 +22,12 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ className }: AppHeaderProps) {
-  const { authUser, user, getActiveAlerts, setUser, setSession, setCompany } = useAppStore();
+  const { authUser, user, getActiveAlerts, getActiveCompany, setUser, setSession, setCompany } = useAppStore();
   const alerts = getActiveAlerts();
   const alertsCount = alerts.length;
-  const userName = authUser?.email || user.company?.name || "Utilizator";
-  const companyCIF = user.company?.cif || "Necompletat";
+  const activeCompany = getActiveCompany();
+  const userName = authUser?.email || activeCompany?.name || "Utilizator";
+  const companyCIF = activeCompany?.cif || "Necompletat";
   const currentMonth = "Noiembrie 2024";
   const navigate = useNavigate();
   const location = useLocation();

@@ -23,7 +23,7 @@ import { Vehicle, Driver, Company } from "@/types/accounting";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function BusinessManagement() {
-  const { user, authUser, setCompany, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver } = useAppStore();
+  const { user, authUser, setCompany, addVehicle, updateVehicle, removeVehicle, addDriver, updateDriver, removeDriver, getActiveCompany } = useAppStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("company");
@@ -63,19 +63,21 @@ export default function BusinessManagement() {
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'vehicle' | 'driver', id: string } | null>(null);
 
   // Load company data when editing
+  const activeCompany = getActiveCompany();
+  
   useEffect(() => {
-    if (isCompanyDialogOpen && user.company) {
+    if (isCompanyDialogOpen && activeCompany) {
       setCompanyFormData({
-        companyName: user.company.name,
-        companyType: user.company.type,
-        cif: user.company.cif,
-        cnp: user.company.cnp || '',
-        vatPayer: user.company.vatPayer,
-        address: user.company.address,
-        contact: user.company.contact
+        companyName: activeCompany.name,
+        companyType: activeCompany.type,
+        cif: activeCompany.cif,
+        cnp: activeCompany.cnp || '',
+        vatPayer: activeCompany.vatPayer,
+        address: activeCompany.address,
+        contact: activeCompany.contact
       });
     }
-  }, [isCompanyDialogOpen, user.company]);
+  }, [isCompanyDialogOpen, activeCompany]);
 
   // Funcții pentru gestionarea companiei
   const openAddCompanyDialog = () => {
@@ -323,40 +325,40 @@ export default function BusinessManagement() {
               <CardTitle>Informații Companie</CardTitle>
             </CardHeader>
             <CardContent>
-              {user.company ? (
+              {activeCompany ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h3 className="font-medium">Nume companie</h3>
-                      <p>{user.company.name}</p>
+                      <p>{activeCompany.name}</p>
                     </div>
                     <div>
                       <h3 className="font-medium">CIF</h3>
-                      <p>{user.company.cif}</p>
+                      <p>{activeCompany.cif}</p>
                     </div>
                     <div>
                       <h3 className="font-medium">Tip companie</h3>
-                      <p>{user.company.type}</p>
+                      <p>{activeCompany.type}</p>
                     </div>
                     <div>
                       <h3 className="font-medium">Plătitor TVA</h3>
-                      <p>{user.company.vatPayer ? 'Da' : 'Nu'}</p>
+                      <p>{activeCompany.vatPayer ? 'Da' : 'Nu'}</p>
                     </div>
                   </div>
 
                   <div>
                     <h3 className="font-medium">Adresă</h3>
-                    <p>{user.company.address.street}, {user.company.address.city}, {user.company.address.county}, {user.company.address.postalCode}</p>
+                    <p>{activeCompany.address.street}, {activeCompany.address.city}, {activeCompany.address.county}, {activeCompany.address.postalCode}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h3 className="font-medium">Telefon</h3>
-                      <p>{user.company.contact.phone}</p>
+                      <p>{activeCompany.contact.phone}</p>
                     </div>
                     <div>
                       <h3 className="font-medium">Email</h3>
-                      <p>{user.company.contact.email}</p>
+                      <p>{activeCompany.contact.email}</p>
                     </div>
                   </div>
 
@@ -705,9 +707,9 @@ export default function BusinessManagement() {
       <Dialog open={isCompanyDialogOpen} onOpenChange={setIsCompanyDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{user.company ? "Editează companie" : "Adaugă companie"}</DialogTitle>
+            <DialogTitle>{activeCompany ? "Editează companie" : "Adaugă companie"}</DialogTitle>
             <DialogDescription>
-              {user.company ? "Modifică detaliile companiei" : "Adaugă informațiile companiei tale"}
+              {activeCompany ? "Modifică detaliile companiei" : "Adaugă informațiile companiei tale"}
             </DialogDescription>
           </DialogHeader>
           

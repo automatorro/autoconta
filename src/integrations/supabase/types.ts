@@ -14,9 +14,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      companies: {
+        Row: {
+          address_city: string | null
+          address_county: string | null
+          address_postal_code: string | null
+          address_street: string | null
+          cif: string
+          cnp: string | null
+          company_name: string
+          company_type: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          vat_intra_community: string | null
+          vat_payer: boolean
+        }
+        Insert: {
+          address_city?: string | null
+          address_county?: string | null
+          address_postal_code?: string | null
+          address_street?: string | null
+          cif: string
+          cnp?: string | null
+          company_name: string
+          company_type: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          vat_intra_community?: string | null
+          vat_payer?: boolean
+        }
+        Update: {
+          address_city?: string | null
+          address_county?: string | null
+          address_postal_code?: string | null
+          address_street?: string | null
+          cif?: string
+          cnp?: string | null
+          company_name?: string
+          company_type?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          vat_intra_community?: string | null
+          vat_payer?: boolean
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           category: string
+          company_id: string | null
           created_at: string
           currency: string
           date: string
@@ -47,6 +102,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          company_id?: string | null
           created_at?: string
           currency?: string
           date: string
@@ -77,6 +133,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          company_id?: string | null
           created_at?: string
           currency?: string
           date?: string
@@ -105,11 +162,20 @@ export type Database = {
           vehicle_id?: string | null
           verified?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       drivers: {
         Row: {
           cnp: string
+          company_id: string | null
           contract_type: string | null
           created_at: string
           email: string | null
@@ -125,6 +191,7 @@ export type Database = {
         }
         Insert: {
           cnp: string
+          company_id?: string | null
           contract_type?: string | null
           created_at?: string
           email?: string | null
@@ -140,6 +207,7 @@ export type Database = {
         }
         Update: {
           cnp?: string
+          company_id?: string | null
           contract_type?: string | null
           created_at?: string
           email?: string | null
@@ -153,65 +221,75 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "drivers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_company_access: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_default: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          role?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_company_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_profiles: {
         Row: {
-          address_city: string | null
-          address_county: string | null
-          address_postal_code: string | null
-          address_street: string | null
-          cif: string | null
-          cnp: string | null
-          company_name: string | null
-          company_type: string | null
           contact_email: string | null
-          contact_phone: string | null
           created_at: string
           id: string
           setup_completed: boolean
           updated_at: string
           user_id: string
-          vat_intra_community: string
-          vat_payer: boolean | null
         }
         Insert: {
-          address_city?: string | null
-          address_county?: string | null
-          address_postal_code?: string | null
-          address_street?: string | null
-          cif?: string | null
-          cnp?: string | null
-          company_name?: string | null
-          company_type?: string | null
           contact_email?: string | null
-          contact_phone?: string | null
           created_at?: string
           id?: string
           setup_completed?: boolean
           updated_at?: string
           user_id: string
-          vat_intra_community?: string
-          vat_payer?: boolean | null
         }
         Update: {
-          address_city?: string | null
-          address_county?: string | null
-          address_postal_code?: string | null
-          address_street?: string | null
-          cif?: string | null
-          cnp?: string | null
-          company_name?: string | null
-          company_type?: string | null
           contact_email?: string | null
-          contact_phone?: string | null
           created_at?: string
           id?: string
           setup_completed?: boolean
           updated_at?: string
           user_id?: string
-          vat_intra_community?: string
-          vat_payer?: boolean | null
         }
         Relationships: []
       }
@@ -220,6 +298,7 @@ export type Database = {
           acquisition_date: string | null
           acquisition_price: number | null
           co2_emissions: number | null
+          company_id: string | null
           created_at: string
           depreciation_method: string | null
           engine_capacity: number | null
@@ -239,6 +318,7 @@ export type Database = {
           acquisition_date?: string | null
           acquisition_price?: number | null
           co2_emissions?: number | null
+          company_id?: string | null
           created_at?: string
           depreciation_method?: string | null
           engine_capacity?: number | null
@@ -258,6 +338,7 @@ export type Database = {
           acquisition_date?: string | null
           acquisition_price?: number | null
           co2_emissions?: number | null
+          company_id?: string | null
           created_at?: string
           depreciation_method?: string | null
           engine_capacity?: number | null
@@ -273,7 +354,15 @@ export type Database = {
           vin?: string | null
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

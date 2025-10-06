@@ -12,6 +12,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { supabase } from "@/integrations/supabase/client";
 import CifLookup from "@/components/CifLookup";
 import { ArrowRight, Building2, Search, SkipForward } from "lucide-react";
+import { Company } from "@/types/accounting";
 
 export default function Setup() {
   const navigate = useNavigate();
@@ -80,11 +81,10 @@ export default function Setup() {
     try {
       console.log('💾 Saving company data:', companyData);
       
-      // Create user profile with company data
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: authUser.id,
+      // 1. Creează compania în tabela companies
+      const { data: newCompany, error: companyError } = await supabase
+        .from('companies')
+        .insert({
           company_name: companyData.companyName,
           company_type: companyData.companyType,
           cif: companyData.cif,
@@ -96,38 +96,77 @@ export default function Setup() {
           address_postal_code: companyData.address.postalCode || null,
           contact_phone: companyData.contact.phone || null,
           contact_email: companyData.contact.email || authUser.email,
+        })
+        .select()
+        .single();
+
+      if (companyError) {
+        console.error('❌ Company creation error:', companyError);
+        throw companyError;
+      }
+
+      console.log('✅ Company created:', newCompany);
+
+      // 2. Creează relația user-company în user_company_access
+      const { error: accessError } = await supabase
+        .from('user_company_access')
+        .insert({
+          user_id: authUser.id,
+          company_id: newCompany.id,
+          role: 'owner',
+          is_default: true
+        });
+
+      if (accessError) {
+        console.error('❌ Access creation error:', accessError);
+        throw accessError;
+      }
+
+      console.log('✅ User-company access created');
+
+      // 3. Marchează setup_completed în user_profiles
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .upsert({
+          user_id: authUser.id,
+          contact_email: authUser.email,
           setup_completed: true
         }, {
           onConflict: 'user_id'
         });
 
-      if (error) {
-        console.error('❌ Supabase error:', error);
-        throw error;
+      if (profileError) {
+        console.error('❌ Profile update error:', profileError);
+        throw profileError;
       }
 
-      // Update local store
-      const company = {
-        id: authUser.id,
+      // 4. Actualizează store-ul local
+      const company: Company = {
+        id: newCompany.id,
         name: companyData.companyName,
         cif: companyData.cif,
         cnp: companyData.cnp || undefined,
         type: companyData.companyType as 'PFA' | 'SRL',
         vatPayer: companyData.vatPayer,
-        address: companyData.address,
-        contact: companyData.contact,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        address: {
+          street: companyData.address.street || '',
+          city: companyData.address.city || '',
+          county: companyData.address.county || '',
+          postalCode: companyData.address.postalCode || ''
+        },
+        contact: {
+          phone: companyData.contact.phone || '',
+          email: companyData.contact.email || authUser.email || ''
+        },
+        createdAt: new Date(newCompany.created_at),
+        updatedAt: new Date(newCompany.updated_at)
       };
       
-      setCompany(company);
-      
-      // Update user data with setup completed
       setUserData({
         id: authUser.id,
         email: authUser.email || '',
         setupCompleted: true,
-        company: company,
+        companies: [company],
         vehicles: [],
         drivers: []
       });
@@ -137,13 +176,12 @@ export default function Setup() {
         description: "Datele companiei au fost salvate cu succes."
       });
 
-      // Redirect to dashboard
       navigate("/dashboard");
-    } catch (error) {
-      console.error('Error saving company data:', error);
+    } catch (error: any) {
+      console.error('❌ Error saving company data:', error);
       toast({
         title: "Eroare",
-        description: "Nu s-au putut salva datele companiei",
+        description: error.message || "Nu s-au putut salva datele companiei",
         variant: "destructive"
       });
     } finally {
