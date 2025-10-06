@@ -66,8 +66,20 @@ export default function Setup() {
   const saveCompanyData = async () => {
     if (!authUser) return;
     
+    // Validare câmpuri obligatorii
+    if (!companyData.companyName || !companyData.cif) {
+      toast({
+        title: "Câmpuri obligatorii lipsă",
+        description: "Te rugăm să completezi cel puțin numele și CIF-ul companiei.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
+      console.log('💾 Saving company data:', companyData);
+      
       // Create user profile with company data
       const { error } = await supabase
         .from('user_profiles')
@@ -78,16 +90,21 @@ export default function Setup() {
           cif: companyData.cif,
           cnp: companyData.cnp || null,
           vat_payer: companyData.vatPayer,
-          address_street: companyData.address.street,
-          address_city: companyData.address.city,
-          address_county: companyData.address.county,
-          address_postal_code: companyData.address.postalCode,
-          contact_phone: companyData.contact.phone,
+          address_street: companyData.address.street || null,
+          address_city: companyData.address.city || null,
+          address_county: companyData.address.county || null,
+          address_postal_code: companyData.address.postalCode || null,
+          contact_phone: companyData.contact.phone || null,
           contact_email: companyData.contact.email || authUser.email,
           setup_completed: true
+        }, {
+          onConflict: 'user_id'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
 
       // Update local store
       const company = {
@@ -140,15 +157,37 @@ export default function Setup() {
     
     setIsLoading(true);
     try {
-      // Actualizează profilul utilizatorului cu setup_completed = true
-      const { error } = await supabase
+      console.log('🔄 Skip setup - checking profile for user:', authUser.id);
+      
+      // Verificăm dacă profilul există
+      const { data: existingProfile, error: checkError } = await supabase
         .from('user_profiles')
-        .update({
-          setup_completed: true
-        })
-        .eq('user_id', authUser.id);
-        
-      if (error) throw error;
+        .select('id')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+      
+      console.log('📊 Existing profile:', existingProfile, 'Error:', checkError);
+      
+      if (existingProfile) {
+        // Profilul există, facem UPDATE
+        const { error } = await supabase
+          .from('user_profiles')
+          .update({ setup_completed: true })
+          .eq('user_id', authUser.id);
+          
+        if (error) throw error;
+      } else {
+        // Profilul nu există, îl creăm
+        const { error } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: authUser.id,
+            contact_email: authUser.email,
+            setup_completed: true
+          });
+          
+        if (error) throw error;
+      }
       
       // Actualizează starea locală
       setUserData({
@@ -160,13 +199,17 @@ export default function Setup() {
         drivers: []
       });
       
-      // Redirecționează către dashboard
+      toast({
+        title: 'Success',
+        description: 'Setup omis cu succes.'
+      });
+      
       navigate('/dashboard');
     } catch (error) {
-      console.error('Eroare la omiterea configurării:', error);
+      console.error('❌ Skip setup error:', error);
       toast({
         title: 'Eroare',
-        description: 'A apărut o eroare la omiterea configurării. Te rugăm să încerci din nou.',
+        description: error.message || 'A apărut o eroare.',
         variant: 'destructive'
       });
     } finally {
