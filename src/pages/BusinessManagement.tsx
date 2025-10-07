@@ -111,92 +111,56 @@ export default function BusinessManagement() {
     try {
       console.log('💾 Saving company data:', companyFormData);
       
-      // Verifică dacă compania există deja
-      const { data: existingCompany } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('cif', companyFormData.cif)
-        .single();
+      // Creează sau leagă compania folosind RPC securizat (tratare CIF duplicat)
+      const { data: newCompany, error: rpcError } = await supabase.rpc('create_or_link_company', {
+        p_company_name: companyFormData.companyName,
+        p_company_type: companyFormData.companyType,
+        p_cif: companyFormData.cif,
+        p_cnp: companyFormData.cnp || null,
+        p_vat_payer: companyFormData.vatPayer,
+        p_address_street: companyFormData.address.street || null,
+        p_address_city: companyFormData.address.city || null,
+        p_address_county: companyFormData.address.county || null,
+        p_address_postal_code: companyFormData.address.postalCode || null,
+        p_contact_phone: companyFormData.contact.phone || null,
+        p_contact_email: companyFormData.contact.email || authUser?.email || null,
+      });
 
-      let companyId: string;
-
-      if (existingCompany) {
-        // Actualizează compania existentă
-        const { data: updatedCompany, error: updateError } = await supabase
-          .from('companies')
-          .update({
-            company_name: companyFormData.companyName,
-            company_type: companyFormData.companyType,
-            cnp: companyFormData.cnp || null,
-            vat_payer: companyFormData.vatPayer,
-            address_street: companyFormData.address.street || null,
-            address_city: companyFormData.address.city || null,
-            address_county: companyFormData.address.county || null,
-            address_postal_code: companyFormData.address.postalCode || null,
-            contact_phone: companyFormData.contact.phone || null,
-            contact_email: companyFormData.contact.email || authUser.email,
-          })
-          .eq('id', existingCompany.id)
-          .select()
-          .single();
-
-        if (updateError) throw updateError;
-        companyId = existingCompany.id;
-        console.log('✅ Company updated:', updatedCompany);
-      } else {
-        // Creează companie nouă
-        const { data: newCompany, error: createError } = await supabase
-          .from('companies')
-          .insert({
-            company_name: companyFormData.companyName,
-            company_type: companyFormData.companyType,
-            cif: companyFormData.cif,
-            cnp: companyFormData.cnp || null,
-            vat_payer: companyFormData.vatPayer,
-            address_street: companyFormData.address.street || null,
-            address_city: companyFormData.address.city || null,
-            address_county: companyFormData.address.county || null,
-            address_postal_code: companyFormData.address.postalCode || null,
-            contact_phone: companyFormData.contact.phone || null,
-            contact_email: companyFormData.contact.email || authUser.email,
-          })
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        companyId = newCompany.id;
-        console.log('✅ Company created:', newCompany);
-
-        // Creează relația user-company dacă nu există
-        const { error: accessError } = await supabase
-          .from('user_company_access')
-          .upsert({
-            user_id: authUser.id,
-            company_id: companyId,
-            role: 'owner',
-            is_default: true
-          }, {
-            onConflict: 'user_id,company_id'
+      if (rpcError) {
+        const code = (rpcError as any).code;
+        if (code === '42501') {
+          toast({
+            title: "CIF deja înregistrat",
+            description: "Există deja o companie cu acest CIF deținută de alt utilizator.",
+            variant: "destructive",
           });
-
-        if (accessError) {
-          console.error('❌ Access creation error:', accessError);
-          throw accessError;
         }
+        throw rpcError;
       }
+
+      const companyId = newCompany.id;
+      console.log('✅ Company created/linked via RPC:', newCompany);
 
       // Actualizare store local
       const company: Company = {
         id: companyId,
-        name: companyFormData.companyName,
-        cif: companyFormData.cif,
-        cnp: companyFormData.cnp || undefined,
-        type: companyFormData.companyType as 'PFA' | 'SRL',
-        vatPayer: companyFormData.vatPayer,
-        address: companyFormData.address,
-        contact: companyFormData.contact,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        name: newCompany.company_name || companyFormData.companyName,
+        cif: newCompany.cif,
+        cnp: newCompany.cnp || undefined,
+        type: (newCompany.company_type || companyFormData.companyType) as 'PFA' | 'SRL',
+        vatPayer: newCompany.vat_payer,
+        address: {
+          street: newCompany.address_street || companyFormData.address.street,
+          city: newCompany.address_city || companyFormData.address.city,
+          county: newCompany.address_county || companyFormData.address.county,
+          postalCode: newCompany.address_postal_code || companyFormData.address.postalCode,
+        },
+        contact: {
+          phone: newCompany.contact_phone || companyFormData.contact.phone,
+          email: newCompany.contact_email || companyFormData.contact.email,
+        },
+        createdAt: new Date(newCompany.created_at),
+        updatedAt: new Date(newCompany.updated_at)
       };
 
       setCompany(company);

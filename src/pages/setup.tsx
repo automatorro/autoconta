@@ -79,50 +79,35 @@ export default function Setup() {
     
     setIsLoading(true);
     try {
-      console.log('💾 Saving company data:', companyData);
-      
-      // 1. Creează compania în tabela companies
-      const { data: newCompany, error: companyError } = await supabase
-        .from('companies')
-        .insert({
-          company_name: companyData.companyName,
-          company_type: companyData.companyType,
-          cif: companyData.cif,
-          cnp: companyData.cnp || null,
-          vat_payer: companyData.vatPayer,
-          address_street: companyData.address.street || null,
-          address_city: companyData.address.city || null,
-          address_county: companyData.address.county || null,
-          address_postal_code: companyData.address.postalCode || null,
-          contact_phone: companyData.contact.phone || null,
-          contact_email: companyData.contact.email || authUser.email,
-        })
-        .select()
-        .single();
+      console.log('💾 Saving company data (via RPC):', companyData);
 
-      if (companyError) {
-        console.error('❌ Company creation error:', companyError);
-        throw companyError;
+      // Creează sau leagă compania folosind RPC securizat (tratare CIF duplicat)
+      const { data: newCompany, error: rpcError } = await supabase.rpc('create_or_link_company', {
+        p_company_name: companyData.companyName,
+        p_company_type: companyData.companyType,
+        p_cif: companyData.cif,
+        p_cnp: companyData.cnp || null,
+        p_vat_payer: companyData.vatPayer,
+        p_address_street: companyData.address.street || null,
+        p_address_city: companyData.address.city || null,
+        p_address_county: companyData.address.county || null,
+        p_address_postal_code: companyData.address.postalCode || null,
+        p_contact_phone: companyData.contact.phone || null,
+        p_contact_email: companyData.contact.email || authUser.email,
+      });
+
+      if (rpcError) {
+        // Mesaj clar dacă CIF este deja deținut de alt utilizator
+        if ((rpcError as any).code === '42501') {
+          toast({
+            title: "CIF deja înregistrat",
+            description: "Există deja o companie cu acest CIF, deținută de alt utilizator.",
+            variant: "destructive",
+          });
+        }
+        console.error('❌ RPC create/link company error:', rpcError);
+        throw rpcError;
       }
-
-      console.log('✅ Company created:', newCompany);
-
-      // 2. Creează relația user-company în user_company_access
-      const { error: accessError } = await supabase
-        .from('user_company_access')
-        .insert({
-          user_id: authUser.id,
-          company_id: newCompany.id,
-          role: 'owner',
-          is_default: true
-        });
-
-      if (accessError) {
-        console.error('❌ Access creation error:', accessError);
-        throw accessError;
-      }
-
-      console.log('✅ User-company access created');
 
       // 3. Marchează setup_completed în user_profiles
       const { error: profileError } = await supabase

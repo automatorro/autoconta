@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -21,6 +21,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
 import type { ExpenseCategory } from '@/types/accounting';
 import { useOCR } from '@/hooks/useOCR';
+import type { OCRResult } from '@/services/ocrService';
 import { useBusinessSetup } from '@/hooks/useBusinessSetup';
 import { BusinessSetupModal } from '@/components/BusinessSetupModal';
 
@@ -45,6 +46,8 @@ type DocumentFormData = z.infer<typeof documentSchema>;
 
 interface DocumentFormProps {
   file: File;
+  ocrData?: OCRResult | null;
+  fileId?: string;
   onSave: (documentId: string) => void;
   onCancel: () => void;
 }
@@ -64,11 +67,13 @@ const categories: { value: ExpenseCategory; label: string }[] = [
 
 export const DocumentForm: React.FC<DocumentFormProps> = ({
   file,
+  ocrData,
+  fileId,
   onSave,
   onCancel
 }) => {
   const { toast } = useToast();
-  const { authUser, addDocument, vehicles } = useAppStore();
+  const { authUser, addDocument, vehicles, getActiveCompany } = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
   const { processImage, isProcessing } = useOCR();
   const { isBusinessSetupComplete, isLoading: isCheckingSetup } = useBusinessSetup();
@@ -80,7 +85,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
       type: 'expense',
       date: new Date(),
       currency: 'RON',
-      vatRate: 19,
+      vatRate: 21,
       netAmount: 0,
       vatAmount: 0,
       totalAmount: 0,
@@ -94,6 +99,101 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   });
 
   const watchedValues = form.watch();
+  const prefillAppliedRef = useRef(false);
+  const draftLoadedRef = useRef(false);
+  const draftKey = fileId ? `docDraft:${fileId}` : undefined;
+
+  // Prefill form from OCR result if available
+  useEffect(() => {
+    if (!ocrData || prefillAppliedRef.current) return;
+
+    // Dacă încrederea OCR este scăzută, avertizăm și nu precompletăm automat
+    if (typeof ocrData.confidence === 'number' && ocrData.confidence < 50) {
+      toast({
+        title: 'Încredere OCR scăzută',
+        description: 'Datele extrase pot fi inexacte. Verifică manual câmpurile.'
+      });
+      return;
+    }
+
+    if (ocrData.supplierName) form.setValue('supplierName', ocrData.supplierName);
+    if (ocrData.supplierCif) {
+      const cif = ocrData.supplierCif.toUpperCase();
+      const cifRegex = /^RO?[0-9]{6,10}$/i;
+      if (cifRegex.test(cif)) form.setValue('supplierCif', cif);
+    }
+    if (ocrData.documentNumber) form.setValue('documentNumber', ocrData.documentNumber);
+    if (ocrData.date) {
+      const d = new Date(ocrData.date);
+      if (!isNaN(d.getTime())) form.setValue('date', d);
+    }
+    if (ocrData.totalAmount && ocrData.totalAmount > 0) form.setValue('totalAmount', Number(ocrData.totalAmount.toFixed(2)));
+    if (ocrData.vatAmount !== undefined) form.setValue('vatAmount', Number((ocrData.vatAmount || 0).toFixed(2)));
+    if (ocrData.netAmount && ocrData.netAmount > 0) form.setValue('netAmount', Number(ocrData.netAmount.toFixed(2)));
+    if (ocrData.vatRate !== undefined) form.setValue('vatRate', Number(ocrData.vatRate));
+    if (ocrData.category) form.setValue('category', ocrData.category);
+    if (ocrData.description) form.setValue('description', ocrData.description);
+
+    prefillAppliedRef.current = true;
+    toast({
+      title: 'Date OCR precompletate',
+      description: 'Am populat automat câmpurile extrase din document.'
+    });
+  }, [ocrData, form, toast]);
+
+  // Restore draft from localStorage (prioritar față de OCR), o singură dată
+  useEffect(() => {
+    if (!draftKey || draftLoadedRef.current) return;
+    const raw = localStorage.getItem(draftKey);
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      // Setăm valorile existente din draft
+      if (draft.type) form.setValue('type', draft.type);
+      if (draft.documentNumber) form.setValue('documentNumber', draft.documentNumber);
+      if (draft.date) {
+        const d = new Date(draft.date);
+        if (!isNaN(d.getTime())) form.setValue('date', d);
+      }
+      if (draft.supplierName) form.setValue('supplierName', draft.supplierName);
+      if (draft.supplierCif) form.setValue('supplierCif', draft.supplierCif);
+      if (draft.supplierAddress) form.setValue('supplierAddress', draft.supplierAddress);
+      if (typeof draft.netAmount === 'number') form.setValue('netAmount', draft.netAmount);
+      if (typeof draft.vatAmount === 'number') form.setValue('vatAmount', draft.vatAmount);
+      if (typeof draft.totalAmount === 'number') form.setValue('totalAmount', draft.totalAmount);
+      if (typeof draft.vatRate === 'number') form.setValue('vatRate', draft.vatRate);
+      if (draft.currency) form.setValue('currency', draft.currency);
+      if (draft.category) form.setValue('category', draft.category);
+      if (draft.description) form.setValue('description', draft.description);
+      if (draft.vehicleId) form.setValue('vehicleId', draft.vehicleId);
+
+      draftLoadedRef.current = true;
+      toast({
+        title: 'Draft restaurat',
+        description: 'Am încărcat automat draftul salvat pentru acest fișier.'
+      });
+    } catch (e) {
+      console.warn('Nu s-a putut încărca draftul:', e);
+    }
+  }, [draftKey, form, toast]);
+
+  // Persist draft on changes
+  useEffect(() => {
+    if (!draftKey) return;
+    const subscription = form.watch((value) => {
+      try {
+        const payload = {
+          ...value,
+          // serializăm data în ISO pentru stocare
+          date: value.date instanceof Date ? value.date.toISOString() : value.date
+        };
+        localStorage.setItem(draftKey, JSON.stringify(payload));
+      } catch (e) {
+        console.warn('Nu s-a putut salva draftul:', e);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, draftKey]);
 
   // Auto-calculate amounts
   React.useEffect(() => {
@@ -209,6 +309,13 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
       const result = await processImage(file);
       
       if (result) {
+        // Avertizăm dacă încrederea este scăzută
+        if (typeof result.confidence === 'number' && result.confidence < 50) {
+          toast({
+            title: 'Încredere OCR scăzută',
+            description: 'Rezultatele pot fi inexacte. Verifică și corectează manual câmpurile.'
+          });
+        }
         // Procesăm și validăm datele extrase
         const isValid = processOcrData(result);
         
@@ -250,6 +357,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
       return;
     }
 
+    // Ensure an active company is selected for RLS insert policy
+    const activeCompany = getActiveCompany();
+    if (!activeCompany) {
+      toast({
+        title: 'Companie activă lipsă',
+        description: 'Selectează sau configurează compania înainte de a salva documente.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Get the file path from the uploaded file
@@ -260,6 +378,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
         .from('documents')
         .insert({
           user_id: authUser.id,
+          company_id: activeCompany.id,
           type: data.type,
           document_number: data.documentNumber,
           date: data.date.toISOString(),
@@ -312,6 +431,10 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
       };
 
       addDocument(newDocument);
+      // Curățăm draftul din localStorage după salvare
+      if (draftKey) {
+        localStorage.removeItem(draftKey);
+      }
       onSave(documentData.id);
 
     } catch (error) {
@@ -568,7 +691,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                         <SelectItem value="0">0%</SelectItem>
                         <SelectItem value="5">5%</SelectItem>
                         <SelectItem value="9">9%</SelectItem>
-                        <SelectItem value="19">19%</SelectItem>
+                        <SelectItem value="21">21%</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

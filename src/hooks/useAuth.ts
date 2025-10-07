@@ -134,13 +134,13 @@ export function useAuth() {
       const vehiclesForStore: Vehicle[] = [];
       if (activeCompanyId) {
         const { data: vehicles } = await supabase
-          .from('vehicles' as any)
+          .from('vehicles')
           .select('*')
           .eq('company_id', activeCompanyId);
 
         if (vehicles) {
           console.log('🚗 Loading vehicles data:', vehicles.length, 'vehicles found');
-          vehicles.forEach((vehicle: any) => {
+          vehicles.forEach((vehicle: { id: string; make?: string; model?: string; license_plate?: string; year?: number; vin?: string; created_at?: string; updated_at?: string }) => {
             const vehicleData: Vehicle = {
               id: vehicle.id,
               make: vehicle.make || '',
@@ -173,13 +173,13 @@ export function useAuth() {
       const driversForStore: Driver[] = [];
       if (activeCompanyId) {
         const { data: drivers } = await supabase
-          .from('drivers' as any)
+          .from('drivers')
           .select('*')
           .eq('company_id', activeCompanyId);
 
         if (drivers) {
           console.log('👨‍✈️ Loading drivers data:', drivers.length, 'drivers found');
-          drivers.forEach((driver: any) => {
+          drivers.forEach((driver: { id: string; name?: string; cnp?: string; license_number?: string; license_expiry_date?: string; created_at?: string; updated_at?: string }) => {
             const driverData: Driver = {
               id: driver.id,
               name: driver.name || '',
@@ -210,7 +210,7 @@ export function useAuth() {
       // Finally set the complete user data
       const userData = {
         id: userId,
-        email: (profile as any)?.contact_email || userEmail || '',
+        email: (profile as { contact_email?: string })?.contact_email || userEmail || '',
         setupCompleted: setupCompleted,
         companies,
         vehicles: vehiclesForStore,
@@ -421,7 +421,7 @@ export function useAuth() {
       return { error: null };
     } catch (error) {
       console.error('❌ Error during signOut:', error);
-      return { error: error as any };
+      return { error: error as Error };
     }
   };
 

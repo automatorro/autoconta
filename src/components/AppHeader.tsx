@@ -224,11 +224,11 @@ export function AppHeader({ className }: AppHeaderProps) {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Contul meu</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate("/settings")}>
+            <DropdownMenuItem onSelect={() => navigate("/settings")}>
               <User className="mr-2 h-4 w-4" />
               Profil firmă
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/settings")}>
+            <DropdownMenuItem onSelect={() => navigate("/business")}>
               <Settings className="mr-2 h-4 w-4" />
               Setări și Management
             </DropdownMenuItem>
@@ -241,11 +241,8 @@ export function AppHeader({ className }: AppHeaderProps) {
               Backup & Export
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => {
-              toast({
-                title: "Suport tehnic",
-                description: "Pentru suport, contactați-ne la support@autoconta.ro",
-              });
+            <DropdownMenuItem onSelect={() => {
+              window.location.href = "mailto:support@autoconta.mock?subject=Suport%20tehnic&body=Descrie%20problema%20pe%20scurt";
             }}>
               Suport tehnic
             </DropdownMenuItem>

@@ -109,6 +109,16 @@ class OCRService {
         year = `20${year}`;
       }
       result.date = `${year}-${month}-${day}`;
+    } else {
+      // Year-first format: 2025-08-12 or 2025/08/12
+      const ymdPattern = /(\d{4})[\.|\/\-](\d{1,2})[\.|\/\-](\d{1,2})/;
+      const ymdMatch = text.match(ymdPattern);
+      if (ymdMatch) {
+        const year = ymdMatch[1];
+        const month = ymdMatch[2].padStart(2, '0');
+        const day = ymdMatch[3].padStart(2, '0');
+        result.date = `${year}-${month}-${day}`;
+      }
     }
 
     // Extract amounts
@@ -134,7 +144,9 @@ class OCRService {
     const totalPattern = /(?:total|total plata|de plata|suma)[:\s]*(\d+[,.]?\d*)/i;
     const totalMatch = text.match(totalPattern);
     if (totalMatch) {
-      amounts.totalAmount = parseFloat(totalMatch[1].replace(',', '.'));
+      const raw = totalMatch[1];
+      const normalized = raw.replace(/\s+/g, '').replace(/\./g, '').replace(',', '.');
+      amounts.totalAmount = parseFloat(normalized);
     }
 
     // Extract VAT info
@@ -142,7 +154,9 @@ class OCRService {
     const vatMatch = text.match(vatPattern);
     if (vatMatch) {
       amounts.vatRate = parseFloat(vatMatch[1]);
-      amounts.vatAmount = parseFloat(vatMatch[2].replace(',', '.'));
+      const rawVat = vatMatch[2];
+      const normalizedVat = rawVat.replace(/\s+/g, '').replace(/\./g, '').replace(',', '.');
+      amounts.vatAmount = parseFloat(normalizedVat);
     }
 
     // Calculate net amount if we have total and VAT
@@ -150,10 +164,10 @@ class OCRService {
       amounts.netAmount = amounts.totalAmount - amounts.vatAmount;
     }
 
-    // If no VAT found but we have total, assume it includes VAT at 19%
+    // If no VAT found but we have total, assume it includes VAT at 21%
     if (amounts.totalAmount && !amounts.vatAmount) {
-      amounts.vatRate = 19;
-      amounts.netAmount = amounts.totalAmount / 1.19;
+      amounts.vatRate = 21;
+      amounts.netAmount = amounts.totalAmount / 1.21;
       amounts.vatAmount = amounts.totalAmount - amounts.netAmount;
     }
 

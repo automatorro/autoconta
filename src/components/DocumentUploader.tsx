@@ -361,6 +361,8 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
       {selectedFile && selectedFile.status === 'uploaded' && (
         <DocumentForm
           file={selectedFile.file}
+          ocrData={selectedFile.ocrData}
+          fileId={selectedFile.id}
           onSave={handleDocumentSaved}
           onCancel={() => setSelectedFile(null)}
         />
