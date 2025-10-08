@@ -71,24 +71,33 @@ class OCRService {
       extractedText: text
     };
 
-    // Extract CIF (Romanian tax ID)
-    const cifPattern = /(?:CIF|C\.I\.F\.?|cod fiscal|CF)[:\s]*(?:RO\s*)?(\d{8,10})/i;
-    const cifMatch = text.match(cifPattern);
-    if (cifMatch) {
-      result.supplierCif = `RO${cifMatch[1]}`;
+    // Extract CIF (Romanian tax ID) - pattern îmbunătățit
+    const cifPattern = /(?:CIF|C\.?I\.?F\.?|cod\s+fiscal|CF|CUI)[:\s]*(?:RO\s*)?(\d[\s\d]{5,12})/gi;
+    const cifMatches = Array.from(text.matchAll(cifPattern));
+    if (cifMatches.length > 0) {
+      // Curățăm spațiile din CIF
+      const cleanedCif = cifMatches[0][1].replace(/\s+/g, '');
+      result.supplierCif = `RO${cleanedCif}`;
     }
 
-    // Extract supplier name (usually first meaningful line or after header keywords)
-    const headerKeywords = ['bon fiscal', 'chitanta', 'factura', 'receipt'];
-    let supplierLine = lines.find(line => 
-      line.length > 3 && 
-      !headerKeywords.some(keyword => line.toLowerCase().includes(keyword)) &&
-      !/^\d/.test(line) && // Not starting with numbers
-      !/^[*\-=+]/.test(line) // Not starting with symbols
-    );
-    
-    if (supplierLine) {
-      result.supplierName = supplierLine.replace(/[*\-=+]/g, '').trim();
+    // Extract supplier name - pattern îmbunătățit pentru companii românești
+    const companyPattern = /(?:SC|S\.C\.?|SRL|S\.R\.L\.?|PFA|P\.F\.A\.?|SA|S\.A\.?)\s+([A-ZĂÂÎȘȚ][A-ZĂÂÎȘȚ\s&.\-]+?)(?=\s+(?:CIF|SRL|SA|S\.R\.L|S\.A|$))/i;
+    const companyMatch = text.match(companyPattern);
+    if (companyMatch && companyMatch[1]) {
+      result.supplierName = `${companyMatch[0].trim()}`;
+    } else {
+      // Fallback: prima linie semnificativă
+      const headerKeywords = ['bon fiscal', 'chitanta', 'factura', 'receipt'];
+      let supplierLine = lines.find(line => 
+        line.length > 3 && 
+        !headerKeywords.some(keyword => line.toLowerCase().includes(keyword)) &&
+        !/^\d/.test(line) && 
+        !/^[*\-=+]/.test(line)
+      );
+      
+      if (supplierLine) {
+        result.supplierName = supplierLine.replace(/[*\-=+]/g, '').trim();
+      }
     }
 
     // Extract document number
@@ -140,21 +149,22 @@ class OCRService {
   private extractAmounts(text: string): Partial<OCRResult> {
     const amounts: Partial<OCRResult> = {};
     
-    // Extract total amount (look for TOTAL, Total plata, DE PLATA)
-    const totalPattern = /(?:total|total plata|de plata|suma)[:\s]*(\d+[,.]?\d*)/i;
-    const totalMatch = text.match(totalPattern);
-    if (totalMatch) {
-      const raw = totalMatch[1];
+    // Extract total amount - pattern îmbunătățit pentru documente românești
+    const totalPattern = /(?:total|total\s+plat[aă]|de\s+plat[aă]|suma|total\s+lei|total\s+ron|total\s+de\s+plat[aă])[:\s]*(\d+[\s,.]?\d*)/gi;
+    const totalMatches = Array.from(text.matchAll(totalPattern));
+    if (totalMatches.length > 0) {
+      // Luăm ultima potrivire (de obicei suma finală)
+      const raw = totalMatches[totalMatches.length - 1][1];
       const normalized = raw.replace(/\s+/g, '').replace(/\./g, '').replace(',', '.');
       amounts.totalAmount = parseFloat(normalized);
     }
 
-    // Extract VAT info
-    const vatPattern = /(?:tva|t\.v\.a\.?)\s*(\d+)%[:\s]*(\d+[,.]?\d*)/i;
-    const vatMatch = text.match(vatPattern);
-    if (vatMatch) {
-      amounts.vatRate = parseFloat(vatMatch[1]);
-      const rawVat = vatMatch[2];
+    // Extract VAT info - pattern îmbunătățit
+    const vatPattern = /(?:tva|t\.?\s*v\.?\s*a\.?)\s*(\d{1,2})\s*%[:\s]*(\d+[,.]?\d*)/gi;
+    const vatMatches = Array.from(text.matchAll(vatPattern));
+    if (vatMatches.length > 0) {
+      amounts.vatRate = parseFloat(vatMatches[0][1]);
+      const rawVat = vatMatches[0][2];
       const normalizedVat = rawVat.replace(/\s+/g, '').replace(/\./g, '').replace(',', '.');
       amounts.vatAmount = parseFloat(normalizedVat);
     }

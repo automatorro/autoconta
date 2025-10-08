@@ -81,7 +81,28 @@ export default function Setup() {
     try {
       console.log('💾 Saving company data (via RPC):', companyData);
 
+      // Type pentru rezultatul RPC (workaround pentru types.ts read-only)
+      type CompanyRpcResult = {
+        id: string;
+        company_name: string;
+        company_type: string;
+        cif: string;
+        cnp: string | null;
+        vat_payer: boolean;
+        vat_intra_community: string | null;
+        address_street: string | null;
+        address_city: string | null;
+        address_county: string | null;
+        address_postal_code: string | null;
+        contact_phone: string | null;
+        contact_email: string | null;
+        created_at: string;
+        updated_at: string;
+        created_by: string | null;
+      };
+
       // Creează sau leagă compania folosind RPC securizat (tratare CIF duplicat)
+      // @ts-ignore - RPC function exists in database but types.ts is read-only
       const { data: newCompany, error: rpcError } = await supabase.rpc('create_or_link_company', {
         p_company_name: companyData.companyName,
         p_company_type: companyData.companyType,
@@ -94,7 +115,7 @@ export default function Setup() {
         p_address_postal_code: companyData.address.postalCode || null,
         p_contact_phone: companyData.contact.phone || null,
         p_contact_email: companyData.contact.email || authUser.email,
-      });
+      }) as { data: CompanyRpcResult | null; error: any };
 
       if (rpcError) {
         // Mesaj clar dacă CIF este deja deținut de alt utilizator
@@ -125,7 +146,11 @@ export default function Setup() {
         throw profileError;
       }
 
-      // 4. Actualizează store-ul local
+      // 4. Verificare null și actualizare store-ul local
+      if (!newCompany) {
+        throw new Error('RPC returned null company data');
+      }
+
       const company: Company = {
         id: newCompany.id,
         name: companyData.companyName,

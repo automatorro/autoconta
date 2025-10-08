@@ -111,7 +111,28 @@ export default function BusinessManagement() {
     try {
       console.log('💾 Saving company data:', companyFormData);
       
+      // Type pentru rezultatul RPC (workaround pentru types.ts read-only)
+      type CompanyRpcResult = {
+        id: string;
+        company_name: string;
+        company_type: string;
+        cif: string;
+        cnp: string | null;
+        vat_payer: boolean;
+        vat_intra_community: string | null;
+        address_street: string | null;
+        address_city: string | null;
+        address_county: string | null;
+        address_postal_code: string | null;
+        contact_phone: string | null;
+        contact_email: string | null;
+        created_at: string;
+        updated_at: string;
+        created_by: string | null;
+      };
+
       // Creează sau leagă compania folosind RPC securizat (tratare CIF duplicat)
+      // @ts-ignore - RPC function exists in database but types.ts is read-only
       const { data: newCompany, error: rpcError } = await supabase.rpc('create_or_link_company', {
         p_company_name: companyFormData.companyName,
         p_company_type: companyFormData.companyType,
@@ -124,7 +145,7 @@ export default function BusinessManagement() {
         p_address_postal_code: companyFormData.address.postalCode || null,
         p_contact_phone: companyFormData.contact.phone || null,
         p_contact_email: companyFormData.contact.email || authUser?.email || null,
-      });
+      }) as { data: CompanyRpcResult | null; error: any };
 
       if (rpcError) {
         const code = (rpcError as any).code;
@@ -136,6 +157,11 @@ export default function BusinessManagement() {
           });
         }
         throw rpcError;
+      }
+
+      // Verificare null
+      if (!newCompany) {
+        throw new Error('RPC returned null company data');
       }
 
       const companyId = newCompany.id;

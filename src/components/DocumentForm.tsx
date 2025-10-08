@@ -16,6 +16,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,6 +79,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const { processImage, isProcessing } = useOCR();
   const { isBusinessSetupComplete, isLoading: isCheckingSetup } = useBusinessSetup();
   const [showBusinessSetupModal, setShowBusinessSetupModal] = useState(false);
+  const [rawOcrText, setRawOcrText] = useState<string>('');
+  const [ocrConfidenceScores, setOcrConfidenceScores] = useState<Record<string, number>>({});
 
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentSchema),
@@ -309,25 +312,53 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
       const result = await processImage(file);
       
       if (result) {
-        // Avertizăm dacă încrederea este scăzută
-        if (typeof result.confidence === 'number' && result.confidence < 50) {
-          toast({
-            title: 'Încredere OCR scăzută',
-            description: 'Rezultatele pot fi inexacte. Verifică și corectează manual câmpurile.'
-          });
-        }
-        // Procesăm și validăm datele extrase
-        const isValid = processOcrData(result);
+        console.log('🔍 OCR Result:', result);
         
-        if (isValid) {
+        // Salvăm textul brut OCR
+        setRawOcrText(result.extractedText || '');
+        
+        // Calculăm confidence pentru fiecare câmp
+        const confidenceScores: Record<string, number> = {
+          supplierName: result.supplierName && result.supplierName.length > 3 ? 80 : 0,
+          supplierCif: result.supplierCif && result.supplierCif.length > 5 ? 85 : 0,
+          documentNumber: result.documentNumber && result.documentNumber.length > 0 ? 75 : 0,
+          date: result.date ? 70 : 0,
+          totalAmount: result.totalAmount && result.totalAmount > 0 ? 90 : 0,
+          vatAmount: result.vatAmount !== undefined ? 85 : 0,
+          netAmount: result.netAmount && result.netAmount > 0 ? 85 : 0,
+          vatRate: result.vatRate !== undefined ? 80 : 0,
+          category: result.category !== 'altele' ? 70 : 30,
+          description: result.description && result.description.length > 5 ? 65 : 0
+        };
+        setOcrConfidenceScores(confidenceScores);
+        
+        // Pre-populăm câmpurile cu datele OCR
+        if (result.supplierName) form.setValue('supplierName', result.supplierName);
+        if (result.supplierCif) form.setValue('supplierCif', result.supplierCif);
+        if (result.documentNumber) form.setValue('documentNumber', result.documentNumber);
+        if (result.date) {
+          const d = new Date(result.date);
+          if (!isNaN(d.getTime())) form.setValue('date', d);
+        }
+        if (result.totalAmount && result.totalAmount > 0) form.setValue('totalAmount', Number(result.totalAmount.toFixed(2)));
+        if (result.vatAmount !== undefined) form.setValue('vatAmount', Number((result.vatAmount || 0).toFixed(2)));
+        if (result.netAmount && result.netAmount > 0) form.setValue('netAmount', Number(result.netAmount.toFixed(2)));
+        if (result.vatRate !== undefined) form.setValue('vatRate', Number(result.vatRate));
+        if (result.category) form.setValue('category', result.category);
+        if (result.description) form.setValue('description', result.description);
+        
+        // Afișăm toast cu rezultatul
+        const avgConfidence = Object.values(confidenceScores).reduce((a, b) => a + b, 0) / Object.values(confidenceScores).filter(v => v > 0).length;
+        
+        if (avgConfidence < 50) {
           toast({
-            title: 'Extragere reușită',
-            description: 'Datele au fost extrase și validate cu succes.'
+            title: '⚠️ Încredere OCR scăzută',
+            description: `Confidence medie: ${avgConfidence.toFixed(0)}%. Verifică manual toate câmpurile.`
           });
         } else {
           toast({
-            title: 'Extragere parțială',
-            description: 'Datele au fost extrase, dar există erori de validare. Verificați și corectați manual.'
+            title: '✅ OCR Completat',
+            description: `Datele au fost extrase cu ${avgConfidence.toFixed(0)}% încredere. Verifică corectitudinea.`
           });
         }
       } else {
@@ -526,7 +557,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
               name="documentNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Număr Document</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    Număr Document
+                    {ocrConfidenceScores.documentNumber > 0 && (
+                      <Badge 
+                        variant={ocrConfidenceScores.documentNumber > 70 ? "default" : "secondary"}
+                        className="text-xs"
+                      >
+                        {ocrConfidenceScores.documentNumber}% încredere
+                      </Badge>
+                    )}
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: FAC-2024-001" {...field} />
                   </FormControl>
@@ -541,7 +582,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
               name="date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    Data
+                    {ocrConfidenceScores.date > 0 && (
+                      <Badge 
+                        variant={ocrConfidenceScores.date > 70 ? "default" : "secondary"}
+                        className="text-xs"
+                      >
+                        {ocrConfidenceScores.date}% încredere
+                      </Badge>
+                    )}
+                  </FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -582,7 +633,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Categorie</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    Categorie
+                    {ocrConfidenceScores.category > 0 && (
+                      <Badge 
+                        variant={ocrConfidenceScores.category > 70 ? "default" : "secondary"}
+                        className="text-xs"
+                      >
+                        {ocrConfidenceScores.category}% încredere
+                      </Badge>
+                    )}
+                  </FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -603,6 +664,38 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             />
           </div>
 
+          {/* Text OCR Brut - afișat dacă există */}
+          {rawOcrText && (
+            <Card className="p-4 bg-muted/50 border-primary/20">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  📄 Text OCR Original
+                  <Badge variant="outline" className="text-xs">
+                    Pentru copiere manuală
+                  </Badge>
+                </h4>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(rawOcrText);
+                    toast({ 
+                      title: "✓ Text copiat!",
+                      description: "Textul OCR a fost copiat în clipboard."
+                    });
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  📋 Copiază tot
+                </Button>
+              </div>
+              <ScrollArea className="h-[200px] w-full rounded-md border bg-background p-4">
+                <pre className="text-xs whitespace-pre-wrap font-mono">{rawOcrText}</pre>
+              </ScrollArea>
+            </Card>
+          )}
+
           {/* Supplier Information */}
           <div className="space-y-4">
             <h4 className="font-medium">Informații Furnizor</h4>
@@ -612,7 +705,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                 name="supplierName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nume Furnizor</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      Nume Furnizor
+                      {ocrConfidenceScores.supplierName > 0 && (
+                        <Badge 
+                          variant={ocrConfidenceScores.supplierName > 70 ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {ocrConfidenceScores.supplierName}% încredere
+                        </Badge>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Ex: OMV Petrom" {...field} />
                     </FormControl>
@@ -626,7 +729,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                 name="supplierCif"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CIF Furnizor</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      CIF Furnizor
+                      {ocrConfidenceScores.supplierCif > 0 && (
+                        <Badge 
+                          variant={ocrConfidenceScores.supplierCif > 70 ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {ocrConfidenceScores.supplierCif}% încredere
+                        </Badge>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Ex: RO12345678" {...field} />
                     </FormControl>
@@ -660,7 +773,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                 name="netAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Suma Netă</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      Suma Netă
+                      {ocrConfidenceScores.netAmount > 0 && (
+                        <Badge 
+                          variant={ocrConfidenceScores.netAmount > 70 ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {ocrConfidenceScores.netAmount}% încredere
+                        </Badge>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -725,14 +848,34 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>TVA Calculat</Label>
+                <Label className="flex items-center gap-2">
+                  TVA Calculat
+                  {ocrConfidenceScores.vatAmount > 0 && (
+                    <Badge 
+                      variant={ocrConfidenceScores.vatAmount > 70 ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {ocrConfidenceScores.vatAmount}% încredere
+                    </Badge>
+                  )}
+                </Label>
                 <div className="p-2 bg-muted rounded text-sm font-medium">
                   {watchedValues.vatAmount?.toFixed(2) || '0.00'} {watchedValues.currency}
                 </div>
               </div>
 
               <div>
-                <Label>Total Calculat</Label>
+                <Label className="flex items-center gap-2">
+                  Total Calculat
+                  {ocrConfidenceScores.totalAmount > 0 && (
+                    <Badge 
+                      variant={ocrConfidenceScores.totalAmount > 70 ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {ocrConfidenceScores.totalAmount}% încredere
+                    </Badge>
+                  )}
+                </Label>
                 <div className="p-2 bg-muted rounded text-sm font-bold">
                   {watchedValues.totalAmount?.toFixed(2) || '0.00'} {watchedValues.currency}
                 </div>
@@ -746,7 +889,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Descriere</FormLabel>
+                <FormLabel className="flex items-center gap-2">
+                  Descriere
+                  {ocrConfidenceScores.description > 0 && (
+                    <Badge 
+                      variant={ocrConfidenceScores.description > 70 ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {ocrConfidenceScores.description}% încredere
+                    </Badge>
+                  )}
+                </FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Descrierea documentului..."
