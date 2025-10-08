@@ -17,6 +17,9 @@ const AuthCallback = () => {
     const handleAuthCallback = async () => {
       try {
         console.log('🔄 Processing auth callback...');
+        console.log('🌐 Callback location href:', window.location.href);
+        console.log('🌐 Callback location hash:', window.location.hash);
+        console.log('🌐 Callback location search:', window.location.search);
         
         // Verifică dacă există parametri de eroare în URL
         const urlParams = new URLSearchParams(window.location.search);

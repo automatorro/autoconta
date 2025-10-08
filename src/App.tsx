@@ -130,6 +130,17 @@ function AppRoutes() {
         console.log('🚀 Running in production environment');
       }
 
+      // Minimal shim: normalize direct path callbacks to hash routes for HashRouter
+      // This avoids server-side 404 without requiring environment changes
+      const pathname = window.location.pathname;
+      const search = window.location.search || '';
+      if (!window.location.hash && (pathname === '/auth/callback' || pathname === '/setup')) {
+        console.log('🔧 Normalizing path to hash route:', pathname);
+        // Preserve query parameters when moving to hash route
+        window.location.replace(`/#${pathname}${search}`);
+        return; // Stop further processing to avoid double handling
+      }
+
       // Handle hash fragments that might contain auth tokens
       if (window.location.hash) {
         console.log('🔑 Auth hash detected:', window.location.hash);

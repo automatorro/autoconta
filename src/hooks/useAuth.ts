@@ -275,15 +275,14 @@ export function useAuth() {
     const isProduction = window.location.hostname === 'autoconta.lovable.app' || window.location.hostname.includes('.lovable.app');
     const isLocalhost = window.location.hostname === 'localhost';
 
+    // Folosește path-ul fără hash; shim-ul din App.tsx normalizează dacă e necesar
     let redirectUrl = '/auth/callback';
 
     if (isProduction) {
       redirectUrl = `https://autoconta.lovable.app/auth/callback`;
     } else if (isLocalhost) {
-      // Folosim portul curent pentru dezvoltare locală
       redirectUrl = `${window.location.origin}/auth/callback`;
     } else {
-      // Fallback pentru alte medii
       redirectUrl = `${window.location.origin}/auth/callback`;
     }
 
@@ -327,15 +326,14 @@ export function useAuth() {
     const isLocalhost = window.location.hostname === 'localhost';
     const isLocalDev = window.location.port === '8080' || window.location.hostname === 'localhost';
 
+    // Folosește path-ul fără hash; shim-ul din App.tsx normalizează dacă e necesar
     let redirectUrl = '/auth/callback';
 
     if (isProduction) {
       redirectUrl = `https://autoconta.lovable.app/auth/callback`;
     } else if (isLocalhost || isLocalDev) {
-      // Folosim portul curent pentru dezvoltare locală
       redirectUrl = `${window.location.origin}/auth/callback`;
     } else {
-      // Fallback pentru alte medii
       redirectUrl = `${window.location.origin}/auth/callback`;
     }
 
