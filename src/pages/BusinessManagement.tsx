@@ -37,6 +37,7 @@ export default function BusinessManagement() {
     cif: '',
     cnp: '',
     vatPayer: false,
+    vatIntraCommunity: '',
     address: {
       street: '',
       city: '',
@@ -73,6 +74,7 @@ export default function BusinessManagement() {
         cif: activeCompany.cif,
         cnp: activeCompany.cnp || '',
         vatPayer: activeCompany.vatPayer,
+        vatIntraCommunity: activeCompany.vatIntraCommunity || '',
         address: activeCompany.address,
         contact: activeCompany.contact
       });
@@ -87,6 +89,7 @@ export default function BusinessManagement() {
       cif: '',
       cnp: '',
       vatPayer: false,
+      vatIntraCommunity: '',
       address: { street: '', city: '', county: '', postalCode: '' },
       contact: { phone: '', email: authUser?.email || '' }
     });
@@ -167,6 +170,19 @@ export default function BusinessManagement() {
       const companyId = newCompany.id;
       console.log('✅ Company created/linked via RPC:', newCompany);
 
+      // Actualizează TVA Intracomunitar în baza de date (RPC nu primește acest câmp)
+      if (companyFormData.vatIntraCommunity?.trim()) {
+        const { error: vatUpdateError } = await supabase
+          .from('companies')
+          .update({ vat_intra_community: companyFormData.vatIntraCommunity.trim() })
+          .eq('id', companyId);
+        if (vatUpdateError) {
+          console.error('❌ VAT intra-community update error:', vatUpdateError);
+        } else {
+          console.log('✅ VAT intra-community updated');
+        }
+      }
+
       // Actualizare store local
       const company: Company = {
         id: companyId,
@@ -175,6 +191,7 @@ export default function BusinessManagement() {
         cnp: newCompany.cnp || undefined,
         type: (newCompany.company_type || companyFormData.companyType) as 'PFA' | 'SRL',
         vatPayer: newCompany.vat_payer,
+        vatIntraCommunity: newCompany.vat_intra_community || companyFormData.vatIntraCommunity || undefined,
         address: {
           street: newCompany.address_street || companyFormData.address.street,
           city: newCompany.address_city || companyFormData.address.city,
@@ -781,6 +798,18 @@ export default function BusinessManagement() {
                     value={companyFormData.cif}
                     onChange={(e) => setCompanyFormData({...companyFormData, cif: e.target.value})}
                     placeholder="Ex: RO12345678"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="vat-intra">TVA Intracomunitar</Label>
+                  <Input
+                    id="vat-intra"
+                    value={companyFormData.vatIntraCommunity}
+                    onChange={(e) => setCompanyFormData({...companyFormData, vatIntraCommunity: e.target.value})}
+                    placeholder="Ex: RO1234567890"
                   />
                 </div>
               </div>

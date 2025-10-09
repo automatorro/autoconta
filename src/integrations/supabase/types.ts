@@ -369,7 +369,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_or_link_company: {
+        Args: {
+          p_company_name: string
+          p_company_type: string
+          p_cif: string
+          p_cnp: string | null
+          p_vat_payer: boolean
+          p_address_street: string | null
+          p_address_city: string | null
+          p_address_county: string | null
+          p_address_postal_code: string | null
+          p_contact_phone: string | null
+          p_contact_email: string | null
+        }
+        Returns: {
+          id: string
+          company_name: string
+          company_type: string
+          cif: string
+          cnp: string | null
+          vat_payer: boolean
+          vat_intra_community: string | null
+          address_street: string | null
+          address_city: string | null
+          address_county: string | null
+          address_postal_code: string | null
+          contact_phone: string | null
+          contact_email: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+        }
+      }
     }
     Enums: {
       [_ in never]: never

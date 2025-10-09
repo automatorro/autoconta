@@ -81,6 +81,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const [showBusinessSetupModal, setShowBusinessSetupModal] = useState(false);
   const [rawOcrText, setRawOcrText] = useState<string>('');
   const [ocrConfidenceScores, setOcrConfidenceScores] = useState<Record<string, number>>({});
+  const [lastAmountEdited, setLastAmountEdited] = useState<null | 'net' | 'total'>(null);
 
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentSchema),
@@ -198,16 +199,44 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
     return () => subscription.unsubscribe();
   }, [form, draftKey]);
 
-  // Auto-calculate amounts
+  // Helper pentru rotunjire la 2 zecimale (numeric)
+  const round2 = (val: number) => Math.round((val + Number.EPSILON) * 100) / 100;
+
+  // Auto-calculate amounts: suportă introducerea TOTALULUI sau a NETULUI
   React.useEffect(() => {
-    const { netAmount, vatRate } = watchedValues;
-    if (netAmount && vatRate) {
-      const vatAmount = (netAmount * vatRate) / 100;
-      const totalAmount = netAmount + vatAmount;
-      form.setValue('vatAmount', Number(vatAmount.toFixed(2)));
-      form.setValue('totalAmount', Number(totalAmount.toFixed(2)));
+    const { netAmount, totalAmount, vatRate } = watchedValues;
+    const rate = typeof vatRate === 'number' ? vatRate : 0;
+    const r = rate / 100;
+
+    if (rate >= 0) {
+      if (lastAmountEdited === 'total' && typeof totalAmount === 'number' && totalAmount >= 0) {
+        // Calcul din total: net = total / (1 + r); tva = total - net
+        const netCalc = r > -1 ? totalAmount / (1 + r) : totalAmount; // protecție
+        const vatCalc = totalAmount - netCalc;
+        form.setValue('netAmount', round2(netCalc));
+        form.setValue('vatAmount', round2(vatCalc));
+      } else if (lastAmountEdited === 'net' && typeof netAmount === 'number' && netAmount >= 0) {
+        // Calcul din net: tva = net * r; total = net + tva
+        const vatCalc = netAmount * r;
+        const totalCalc = netAmount + vatCalc;
+        form.setValue('vatAmount', round2(vatCalc));
+        form.setValue('totalAmount', round2(totalCalc));
+      } else {
+        // Fallback: dacă avem total și rată, preferăm calcul din total; altfel din net
+        if (typeof totalAmount === 'number' && totalAmount >= 0) {
+          const netCalc = r > -1 ? totalAmount / (1 + r) : totalAmount;
+          const vatCalc = totalAmount - netCalc;
+          form.setValue('netAmount', round2(netCalc));
+          form.setValue('vatAmount', round2(vatCalc));
+        } else if (typeof netAmount === 'number' && netAmount >= 0) {
+          const vatCalc = netAmount * r;
+          const totalCalc = netAmount + vatCalc;
+          form.setValue('vatAmount', round2(vatCalc));
+          form.setValue('totalAmount', round2(totalCalc));
+        }
+      }
     }
-  }, [watchedValues.netAmount, watchedValues.vatRate, form]);
+  }, [watchedValues.netAmount, watchedValues.totalAmount, watchedValues.vatRate, lastAmountEdited, form]);
   
   // Validare date OCR
   const validateOcrData = (ocrData: any) => {
@@ -790,7 +819,11 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          field.onChange(isNaN(val) ? 0 : round2(val));
+                          setLastAmountEdited('net');
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -864,22 +897,39 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                 </div>
               </div>
 
-              <div>
-                <Label className="flex items-center gap-2">
-                  Total Calculat
-                  {ocrConfidenceScores.totalAmount > 0 && (
-                    <Badge 
-                      variant={ocrConfidenceScores.totalAmount > 70 ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {ocrConfidenceScores.totalAmount}% încredere
-                    </Badge>
-                  )}
-                </Label>
-                <div className="p-2 bg-muted rounded text-sm font-bold">
-                  {watchedValues.totalAmount?.toFixed(2) || '0.00'} {watchedValues.currency}
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="totalAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      Total (bon/factură)
+                      {ocrConfidenceScores.totalAmount > 0 && (
+                        <Badge 
+                          variant={ocrConfidenceScores.totalAmount > 70 ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {ocrConfidenceScores.totalAmount}% încredere
+                        </Badge>
+                      )}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          field.onChange(isNaN(val) ? 0 : round2(val));
+                          setLastAmountEdited('total');
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
 

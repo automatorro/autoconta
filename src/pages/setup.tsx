@@ -28,6 +28,7 @@ export default function Setup() {
     cif: '',
     cnp: '',
     vatPayer: false,
+    vatIntraCommunity: '',
     address: {
       street: '',
       city: '',
@@ -151,6 +152,17 @@ export default function Setup() {
         throw new Error('RPC returned null company data');
       }
 
+      // 4.1 Actualizează TVA Intracomunitar în baza de date (RPC nu primește acest câmp)
+      if (companyData.vatIntraCommunity?.trim()) {
+        const { error: vatUpdateError } = await supabase
+          .from('companies')
+          .update({ vat_intra_community: companyData.vatIntraCommunity.trim() })
+          .eq('id', newCompany.id);
+        if (vatUpdateError) {
+          console.error('❌ VAT intra-community update error:', vatUpdateError);
+        }
+      }
+
       const company: Company = {
         id: newCompany.id,
         name: companyData.companyName,
@@ -158,6 +170,7 @@ export default function Setup() {
         cnp: companyData.cnp || undefined,
         type: companyData.companyType as 'PFA' | 'SRL',
         vatPayer: companyData.vatPayer,
+        vatIntraCommunity: newCompany.vat_intra_community || companyData.vatIntraCommunity || undefined,
         address: {
           street: companyData.address.street || '',
           city: companyData.address.city || '',
@@ -317,6 +330,17 @@ export default function Setup() {
                         id="cif"
                         value={companyData.cif}
                         onChange={(e) => setCompanyData({...companyData, cif: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="vat-intra">TVA Intracomunitar</Label>
+                      <Input
+                        id="vat-intra"
+                        value={companyData.vatIntraCommunity}
+                        onChange={(e) => setCompanyData({...companyData, vatIntraCommunity: e.target.value})}
                       />
                     </div>
                   </div>
