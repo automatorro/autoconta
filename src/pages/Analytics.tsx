@@ -4,7 +4,7 @@ import { BarChart3, TrendingUp, Download, Calendar } from "lucide-react";
 
 export default function Analytics() {
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-8 p-4 sm:p-6">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>

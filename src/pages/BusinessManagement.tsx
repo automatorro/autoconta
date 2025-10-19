@@ -576,7 +576,7 @@ export default function BusinessManagement() {
 
       {/* Dialog pentru adăugare/editare vehicul */}
       <Dialog open={isVehicleDialogOpen} onOpenChange={setIsVehicleDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{currentVehicle ? "Editează vehicul" : "Adaugă vehicul"}</DialogTitle>
             <DialogDescription>
@@ -681,7 +681,7 @@ export default function BusinessManagement() {
 
       {/* Dialog pentru adăugare/editare șofer */}
       <Dialog open={isDriverDialogOpen} onOpenChange={setIsDriverDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{currentDriver ? "Editează șofer" : "Adaugă șofer"}</DialogTitle>
             <DialogDescription>
@@ -767,7 +767,7 @@ export default function BusinessManagement() {
 
       {/* Dialog pentru adăugare/editare companie */}
       <Dialog open={isCompanyDialogOpen} onOpenChange={setIsCompanyDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{activeCompany ? "Editează companie" : "Adaugă companie"}</DialogTitle>
             <DialogDescription>

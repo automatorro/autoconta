@@ -7,9 +7,9 @@ import { useNavigate } from "react-router-dom";
 export default function Dashboard() {
   const navigate = useNavigate();
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-8 p-4 sm:p-6">
       {/* Welcome Section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
             Bună ziua, Adrian! 👋

@@ -248,7 +248,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
   return (
     <div className="space-y-6">
       {/* Upload Method Selection */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <Button
           variant={uploadMethod === 'scan' ? 'default' : 'outline'}
           onClick={() => setUploadMethod('scan')}

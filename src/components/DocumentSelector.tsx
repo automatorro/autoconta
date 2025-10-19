@@ -51,7 +51,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90svh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Selectează un document pentru asociere</DialogTitle>
         </DialogHeader>

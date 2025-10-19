@@ -127,7 +127,7 @@ const Documents = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -243,7 +243,7 @@ const Documents = () => {
 
       {/* Upload Dialog */}
       <Dialog open={showUpload} onOpenChange={setShowUpload}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Adaugă Document Nou</DialogTitle>
           </DialogHeader>
@@ -256,25 +256,25 @@ const Documents = () => {
 
       {/* Viewer Dialog */}
       <Dialog open={!!viewerUrl} onOpenChange={() => setViewerUrl(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Vizualizare Document</DialogTitle>
           </DialogHeader>
           {viewerUrl && (
-            <iframe src={viewerUrl} className="w-full h-[70vh]" />
+            <iframe src={viewerUrl} className="w-full h-[65svh] sm:h-[70vh]" />
           )}
         </DialogContent>
       </Dialog>
 
       {/* Expense Details Dialog */}
       <Dialog open={!!viewingDoc} onOpenChange={() => setViewingDoc(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalii Cheltuială</DialogTitle>
           </DialogHeader>
           {viewingDoc && (
             <Dialog open={true} onOpenChange={() => setViewingDoc(null)}>
-              <DialogContent className="sm:max-w-[700px]">
+              <DialogContent className="sm:max-w-[700px] max-h-[90svh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Detalii cheltuială</DialogTitle>
                   <DialogDescription>
@@ -365,7 +365,7 @@ const Documents = () => {
 
       {/* Edit Dialog (formular complet) */}
       <Dialog open={!!editingDoc} onOpenChange={() => setEditingDoc(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editează Document</DialogTitle>
           </DialogHeader>

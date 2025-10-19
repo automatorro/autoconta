@@ -601,7 +601,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           variant="outline"
           onClick={handleOcrExtraction}
           disabled={isProcessing || !file}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 h-11 sm:h-10 px-4 sm:px-3"
         >
           <Zap className="w-4 h-4" />
           {isProcessing ? 'Procesez...' : 'OCR Auto'}
@@ -1073,11 +1073,11 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
           {/* Actions */}
           <div className="flex gap-3 pt-6 border-t">
-            <Button type="submit" disabled={isLoading} className="flex-1">
+            <Button type="submit" disabled={isLoading} className="flex-1 h-11 sm:h-10 px-6 sm:px-4">
               <Save className="w-4 h-4 mr-2" />
               {isLoading ? 'Se salvează...' : (isEditMode ? 'Actualizează Document' : 'Salvează Document')}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} className="h-11 sm:h-10 px-6 sm:px-4">
               <X className="w-4 h-4 mr-2" />
               Anulează
             </Button>
