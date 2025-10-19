@@ -2,8 +2,10 @@ import { DashboardStats } from "@/components/DashboardStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, FileText, Plus, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   return (
     <div className="space-y-8 p-6">
       {/* Welcome Section */}
@@ -22,7 +24,7 @@ export default function Dashboard() {
             <Calendar className="h-4 w-4" />
             Raport lunar
           </Button>
-          <Button className="gap-2 gradient-primary">
+          <Button className="gap-2 gradient-primary" onClick={() => navigate('/documents?upload=true')}>
             <Plus className="h-4 w-4" />
             Document nou
           </Button>

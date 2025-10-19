@@ -20,7 +20,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/integrations/supabase/client';
-import type { ExpenseCategory } from '@/types/accounting';
+import type { ExpenseCategory, Document as AccountingDocument } from '@/types/accounting';
 import { useOCR } from '@/hooks/useOCR';
 import type { OCRResult } from '@/services/ocrService';
 import { useBusinessSetup } from '@/hooks/useBusinessSetup';
@@ -46,9 +46,11 @@ const documentSchema = z.object({
 type DocumentFormData = z.infer<typeof documentSchema>;
 
 interface DocumentFormProps {
-  file: File;
+  file?: File;
   ocrData?: OCRResult | null;
   fileId?: string;
+  filePath?: string;
+  existingDocument?: AccountingDocument;
   onSave: (documentId: string) => void;
   onCancel: () => void;
 }
@@ -70,11 +72,13 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   file,
   ocrData,
   fileId,
+  filePath,
+  existingDocument,
   onSave,
   onCancel
 }) => {
   const { toast } = useToast();
-  const { authUser, addDocument, vehicles, getActiveCompany } = useAppStore();
+  const { authUser, addDocument, updateDocument, vehicles, getActiveCompany } = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
   const { processImage, isProcessing } = useOCR();
   const { isBusinessSetupComplete, isLoading: isCheckingSetup } = useBusinessSetup();
@@ -82,6 +86,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const [rawOcrText, setRawOcrText] = useState<string>('');
   const [ocrConfidenceScores, setOcrConfidenceScores] = useState<Record<string, number>>({});
   const [lastAmountEdited, setLastAmountEdited] = useState<null | 'net' | 'total'>(null);
+  const isEditMode = !!existingDocument;
 
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentSchema),
@@ -144,6 +149,27 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
       description: 'Am populat automat câmpurile extrase din document.'
     });
   }, [ocrData, form, toast]);
+
+  // Prefill din document existent (mod edit)
+  useEffect(() => {
+    if (!existingDocument) return;
+    form.reset({
+      type: existingDocument.type,
+      documentNumber: existingDocument.documentNumber,
+      date: new Date(existingDocument.date),
+      supplierName: existingDocument.supplier.name,
+      supplierCif: existingDocument.supplier.cif,
+      supplierAddress: existingDocument.supplier.address || '',
+      netAmount: existingDocument.amount.netAmount,
+      vatAmount: existingDocument.amount.vatAmount,
+      totalAmount: existingDocument.amount.totalAmount,
+      vatRate: existingDocument.amount.vatRate,
+      currency: existingDocument.currency,
+      category: existingDocument.category,
+      description: existingDocument.description,
+      vehicleId: existingDocument.vehicleId || ''
+    });
+  }, [existingDocument, form]);
 
   // Restore draft from localStorage (prioritar față de OCR), o singură dată
   useEffect(() => {
@@ -411,8 +437,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const onSubmit = async (data: DocumentFormData) => {
     if (!authUser) return;
 
-    // Check if business setup is complete before saving
-    if (!isBusinessSetupComplete) {
+    // Check if business setup is complete before saving (doar la creare)
+    if (!isBusinessSetupComplete && !isEditMode) {
       setShowBusinessSetupModal(true);
       return;
     }
@@ -431,71 +457,123 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
     setIsLoading(true);
     try {
       // Get the file path from the uploaded file
-      const fileName = `${authUser.id}/${Date.now()}-${file.name}`;
+      const fileName = isEditMode
+        ? (filePath || existingDocument!.filePath)
+        : (filePath || `${authUser.id}/${Date.now()}-${file.name}`);
       
-      // Insert document into database
-      const { data: documentData, error } = await supabase
-        .from('documents')
-        .insert({
-          user_id: authUser.id,
-          company_id: activeCompany.id,
+      if (isEditMode && existingDocument) {
+        const { data: updatedData, error } = await supabase
+          .from('documents')
+          .update({
+            type: data.type,
+            document_number: data.documentNumber,
+            date: data.date.toISOString(),
+            supplier_name: data.supplierName,
+            supplier_cif: data.supplierCif,
+            supplier_address: data.supplierAddress,
+            net_amount: data.netAmount,
+            vat_amount: data.vatAmount,
+            total_amount: data.totalAmount,
+            vat_rate: data.vatRate,
+            currency: data.currency,
+            category: data.category,
+            description: data.description,
+            file_path: fileName,
+            vehicle_id: data.vehicleId
+          })
+          .eq('id', existingDocument.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        updateDocument(existingDocument.id, {
           type: data.type,
-          document_number: data.documentNumber,
-          date: data.date.toISOString(),
-          supplier_name: data.supplierName,
-          supplier_cif: data.supplierCif,
-          supplier_address: data.supplierAddress,
-          net_amount: data.netAmount,
-          vat_amount: data.vatAmount,
-          total_amount: data.totalAmount,
-          vat_rate: data.vatRate,
+          documentNumber: data.documentNumber,
+          date: data.date,
+          supplier: {
+            name: data.supplierName,
+            cif: data.supplierCif,
+            address: data.supplierAddress
+          },
+          amount: {
+            netAmount: data.netAmount,
+            vatAmount: data.vatAmount,
+            totalAmount: data.totalAmount,
+            vatRate: data.vatRate
+          },
           currency: data.currency,
-          category: data.category,
+          category: data.category as ExpenseCategory,
           description: data.description,
-          file_path: fileName,
-          vehicle_id: data.vehicleId,
+          filePath: fileName,
+          vehicleId: data.vehicleId,
+          updatedAt: new Date()
+        });
+
+        onSave(existingDocument.id);
+      } else {
+        // Insert document into database
+        const { data: documentData, error } = await supabase
+          .from('documents')
+          .insert({
+            user_id: authUser.id,
+            company_id: activeCompany.id,
+            type: data.type,
+            document_number: data.documentNumber,
+            date: data.date.toISOString(),
+            supplier_name: data.supplierName,
+            supplier_cif: data.supplierCif,
+            supplier_address: data.supplierAddress,
+            net_amount: data.netAmount,
+            vat_amount: data.vatAmount,
+            total_amount: data.totalAmount,
+            vat_rate: data.vatRate,
+            currency: data.currency,
+            category: data.category,
+            description: data.description,
+            file_path: fileName,
+            vehicle_id: data.vehicleId,
+            verified: false,
+            reconciled: false
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const newDocument = {
+          id: documentData.id,
+          type: data.type,
+          documentNumber: data.documentNumber,
+          date: data.date,
+          supplier: {
+            name: data.supplierName,
+            cif: data.supplierCif,
+            address: data.supplierAddress
+          },
+          amount: {
+            netAmount: data.netAmount,
+            vatAmount: data.vatAmount,
+            totalAmount: data.totalAmount,
+            vatRate: data.vatRate
+          },
+          currency: data.currency,
+          category: data.category as ExpenseCategory,
+          description: data.description,
+          filePath: fileName,
           verified: false,
-          reconciled: false
-        })
-        .select()
-        .single();
+          vehicleId: data.vehicleId,
+          reconciled: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
 
-      if (error) throw error;
-
-      // Add to local store
-      const newDocument = {
-        id: documentData.id,
-        type: data.type,
-        documentNumber: data.documentNumber,
-        date: data.date,
-        supplier: {
-          name: data.supplierName,
-          cif: data.supplierCif,
-          address: data.supplierAddress
-        },
-        amount: {
-          netAmount: data.netAmount,
-          vatAmount: data.vatAmount,
-          totalAmount: data.totalAmount,
-          vatRate: data.vatRate
-        },
-        currency: data.currency,
-        category: data.category as ExpenseCategory,
-        description: data.description,
-        filePath: fileName,
-        verified: false,
-        vehicleId: data.vehicleId,
-        reconciled: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      addDocument(newDocument);
-      // Curățăm draftul din localStorage după salvare
-      if (draftKey) {
-        localStorage.removeItem(draftKey);
+        addDocument(newDocument);
+        if (draftKey) {
+          localStorage.removeItem(draftKey);
+        }
+        onSave(documentData.id);
       }
-      onSave(documentData.id);
 
     } catch (error) {
       console.error('Error saving document:', error);
@@ -522,7 +600,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
         <Button
           variant="outline"
           onClick={handleOcrExtraction}
-          disabled={isProcessing}
+          disabled={isProcessing || !file}
           className="flex items-center gap-2"
         >
           <Zap className="w-4 h-4" />
@@ -536,9 +614,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           <div className="p-3 bg-muted rounded-lg">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-background rounded flex items-center justify-center">
-                {file.type.startsWith('image/') ? (
+                {file && file.type?.startsWith('image/') ? (
                   <img 
-                    src={URL.createObjectURL(file)} 
+                    src={file ? URL.createObjectURL(file) : ''} 
                     alt="Preview" 
                     className="w-full h-full object-cover rounded"
                   />
@@ -547,10 +625,12 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium">{file.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
+                <p className="text-sm font-medium">{file ? file.name : 'Atașament existent'}</p>
+                {file && (
+                  <p className="text-xs text-muted-foreground">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -995,7 +1075,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           <div className="flex gap-3 pt-6 border-t">
             <Button type="submit" disabled={isLoading} className="flex-1">
               <Save className="w-4 h-4 mr-2" />
-              {isLoading ? 'Se salvează...' : 'Salvează Document'}
+              {isLoading ? 'Se salvează...' : (isEditMode ? 'Actualizează Document' : 'Salvează Document')}
             </Button>
             <Button type="button" variant="outline" onClick={onCancel}>
               <X className="w-4 h-4 mr-2" />

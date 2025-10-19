@@ -20,6 +20,7 @@ interface UploadedFile {
   id: string;
   documentId?: string;
   ocrData?: OCRResult;
+  storagePath?: string;
 }
 
 interface DocumentUploaderProps {
@@ -126,10 +127,12 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
 
         if (error) throw error;
 
-        // Update status to uploaded
+        const storagePath = data?.path || fileName;
+
+        // Update status to uploaded and store storage path
         setUploadedFiles(prev => prev.map(f => 
           f.id === fileObj.id 
-            ? { ...f, status: 'uploaded', progress: 50 }
+            ? { ...f, status: 'uploaded', progress: 50, storagePath }
             : f
         ));
 
@@ -144,6 +147,11 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
           ));
         }
 
+        // Keep selected file updated with storagePath
+        if (selectedFile?.id === fileObj.id) {
+          setSelectedFile(prev => prev ? { ...prev, storagePath } : prev);
+        }
+
         toast({
           title: 'Succes',
           description: `${fileObj.file.name} a fost încărcat și procesat cu succes.`
@@ -151,7 +159,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
 
         // Auto-select first uploaded file for form
         if (selectedFile === null) {
-          setSelectedFile({ ...fileObj, status: 'uploaded', progress: 100 });
+          setSelectedFile({ ...fileObj, status: 'uploaded', progress: 100, storagePath });
         }
 
       } catch (error) {
@@ -363,6 +371,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
           file={selectedFile.file}
           ocrData={selectedFile.ocrData}
           fileId={selectedFile.id}
+          filePath={selectedFile.storagePath}
           onSave={handleDocumentSaved}
           onCancel={() => setSelectedFile(null)}
         />

@@ -1,22 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DocumentUploader } from '@/components/DocumentUploader';
+import { DocumentForm } from '@/components/DocumentForm';
 import { DocumentCard } from '@/components/DocumentCard';
 import { useAppStore } from '@/store/useAppStore';
 import { useDocuments } from '@/hooks/useDocuments';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import type { Document } from '@/types/accounting';
+import { useLocation } from 'react-router-dom';
 
 const Documents = () => {
-  const { getDocumentsByCategory } = useAppStore();
+  const { getDocumentsByCategory, removeDocument, updateDocument } = useAppStore();
   const { documents, refreshDocuments } = useDocuments();
+  const { toast } = useToast();
   const [showUpload, setShowUpload] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [editingDoc, setEditingDoc] = useState<Document | null>(null);
+  const [editDescription, setEditDescription] = useState<string>('');
+  const [editCategory, setEditCategory] = useState<string>('altele');
+  const [viewingDoc, setViewingDoc] = useState<Document | null>(null);
+
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('upload')) {
+      setShowUpload(true);
+    }
+  }, [location.search]);
 
   const categories = [
     { value: 'all', label: 'Toate categoriile' },
@@ -48,6 +68,62 @@ const Documents = () => {
       const now = new Date();
       return docDate.getMonth() === now.getMonth() && docDate.getFullYear() === now.getFullYear();
     }).length
+  };
+
+  const handleView = async (doc: Document) => {
+    try {
+      if (!doc.filePath) {
+        toast({ title: 'Eroare', description: 'Document fără fișier atașat', variant: 'destructive' });
+        return;
+      }
+      const { data, error } = await supabase.storage.from('documents').createSignedUrl(doc.filePath, 60);
+      if (error || !data?.signedUrl) throw error || new Error('URL semnat indisponibil');
+      setViewerUrl(data.signedUrl);
+    } catch (e) {
+      toast({ title: 'Eroare', description: 'Nu s-a putut deschide documentul', variant: 'destructive' });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const doc = documents.find(d => d.id === id);
+      const { error } = await supabase.from('documents').delete().eq('id', id);
+      if (error) throw error;
+      removeDocument(id);
+      // Opțional: șterge fișierul din storage dacă există
+      if (doc?.filePath) {
+        await supabase.storage.from('documents').remove([doc.filePath]);
+      }
+      toast({ title: 'Șters', description: 'Documentul a fost șters.' });
+    } catch (e) {
+      toast({ title: 'Eroare', description: 'Nu s-a putut șterge documentul', variant: 'destructive' });
+    }
+  };
+
+  const openEdit = (doc: Document) => {
+    setEditingDoc(doc);
+    setEditDescription(doc.description || '');
+    setEditCategory(doc.category || 'altele');
+  };
+
+  const openDetails = (doc: Document) => {
+    setViewingDoc(doc);
+  };
+
+  const saveEdit = async () => {
+    if (!editingDoc) return;
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ description: editDescription, category: editCategory })
+        .eq('id', editingDoc.id);
+      if (error) throw error;
+      updateDocument(editingDoc.id, { description: editDescription, category: editCategory as any });
+      toast({ title: 'Salvat', description: 'Documentul a fost actualizat.' });
+      setEditingDoc(null);
+    } catch (e) {
+      toast({ title: 'Eroare', description: 'Nu s-a putut salva modificarea', variant: 'destructive' });
+    }
   };
 
   return (
@@ -137,7 +213,13 @@ const Documents = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredDocuments.length > 0 ? (
           filteredDocuments.map((document) => (
-            <DocumentCard key={document.id} document={document} />
+            <DocumentCard
+              key={document.id}
+              document={document}
+              onView={() => setEditingDoc(document)}
+              onDelete={handleDelete}
+              onEdit={openEdit}
+            />
           ))
         ) : (
           <div className="col-span-full text-center py-12">
@@ -169,6 +251,136 @@ const Documents = () => {
             setShowUpload(false);
             refreshDocuments();
           }} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Viewer Dialog */}
+      <Dialog open={!!viewerUrl} onOpenChange={() => setViewerUrl(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Vizualizare Document</DialogTitle>
+          </DialogHeader>
+          {viewerUrl && (
+            <iframe src={viewerUrl} className="w-full h-[70vh]" />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Expense Details Dialog */}
+      <Dialog open={!!viewingDoc} onOpenChange={() => setViewingDoc(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalii Cheltuială</DialogTitle>
+          </DialogHeader>
+          {viewingDoc && (
+            <Dialog open={true} onOpenChange={() => setViewingDoc(null)}>
+              <DialogContent className="sm:max-w-[700px]">
+                <DialogHeader>
+                  <DialogTitle>Detalii cheltuială</DialogTitle>
+                  <DialogDescription>
+                    Vezi informațiile cheltuielii și atașamentul dacă este necesar.
+                  </DialogDescription>
+                </DialogHeader>
+            
+                <div className="space-y-4 text-sm">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-muted-foreground">Tip</div>
+                      <div className="font-medium">{viewingDoc.type}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Număr</div>
+                      <div className="font-medium">{viewingDoc.documentNumber}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Data</div>
+                      <div className="font-medium">{new Date(viewingDoc.date).toLocaleDateString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Monedă</div>
+                      <div className="font-medium">{viewingDoc.currency}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Categorie</div>
+                      <div className="font-medium">{viewingDoc.category}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Vehicul</div>
+                      <div className="font-medium">{viewingDoc.vehicleId || '-'}</div>
+                    </div>
+                  </div>
+            
+                  <div>
+                    <div className="text-muted-foreground">Furnizor</div>
+                    <div className="font-medium">{viewingDoc.supplier?.name}</div>
+                    {viewingDoc.supplier?.cif && (
+                      <div className="text-muted-foreground">CIF: {viewingDoc.supplier?.cif}</div>
+                    )}
+                    {viewingDoc.supplier?.address && (
+                      <div className="text-muted-foreground">Adresă: {viewingDoc.supplier?.address}</div>
+                    )}
+                  </div>
+            
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-muted-foreground">Net</div>
+                      <div className="font-medium">{viewingDoc.amount?.netAmount}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">TVA</div>
+                      <div className="font-medium">{viewingDoc.amount?.vatAmount} ({viewingDoc.amount?.vatRate}%)</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Total</div>
+                      <div className="font-medium">{viewingDoc.amount?.totalAmount}</div>
+                    </div>
+                  </div>
+            
+                  {viewingDoc.description && (
+                    <div>
+                      <div className="text-muted-foreground">Descriere</div>
+                      <div className="font-medium">{viewingDoc.description}</div>
+                    </div>
+                  )}
+            
+                  {viewingDoc.filePath && (
+                    <div className="mt-2">
+                      <Button variant="secondary" onClick={() => onViewAttachment(viewingDoc)}>
+                        Vezi atașamentul
+                      </Button>
+                    </div>
+                  )}
+                </div>
+            
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setViewingDoc(null)}>
+                    Închide
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog (formular complet) */}
+      <Dialog open={!!editingDoc} onOpenChange={() => setEditingDoc(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editează Document</DialogTitle>
+          </DialogHeader>
+          {editingDoc && (
+            <DocumentForm
+              existingDocument={editingDoc}
+              filePath={editingDoc.filePath}
+              onSave={(id) => {
+                setEditingDoc(null);
+                toast({ title: 'Salvat', description: 'Documentul a fost actualizat.' });
+                refreshDocuments();
+              }}
+              onCancel={() => setEditingDoc(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

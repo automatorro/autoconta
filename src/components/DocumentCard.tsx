@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { Document } from '@/types/accounting';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentCardProps {
   document: Document;
@@ -54,15 +55,57 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
 
   const handleDownload = async () => {
     try {
-      // Implementation for downloading the document file
+      // Export detaliile cheltuielii ca CSV, nu atașamentul
+      const headers = [
+        'ID', 'Tip', 'Număr', 'Data', 'Furnizor', 'CIF', 'Adresă',
+        'Net', 'TVA', 'CotaTVA', 'Total', 'Monedă', 'Categorie', 'Descriere', 'VehiculID',
+        'Verificat', 'Reconciliat'
+      ];
+
+      const values = [
+        document.id,
+        document.type,
+        document.documentNumber,
+        new Date(document.date).toISOString(),
+        document.supplier.name,
+        document.supplier.cif || '',
+        document.supplier.address || '',
+        String(document.amount.netAmount),
+        String(document.amount.vatAmount),
+        String(document.amount.vatRate),
+        String(document.amount.totalAmount),
+        document.currency,
+        document.category,
+        document.description || '',
+        document.vehicleId || '',
+        document.verified ? 'da' : 'nu',
+        document.reconciled ? 'da' : 'nu'
+      ];
+
+      const escape = (val: string) => {
+        const v = val ?? '';
+        return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}` : v;
+      };
+
+      const csv = `${headers.join(',')}\n${values.map(v => escape(String(v))).join(',')}`;
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = `cheltuiala_${document.documentNumber || document.id}.csv`;
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
       toast({
-        title: 'Info',
-        description: 'Funcționalitatea de descărcare va fi implementată în curând.'
+        title: 'Export reușit',
+        description: 'Cheltuiala a fost descărcată ca CSV.'
       });
     } catch (error) {
       toast({
         title: 'Eroare',
-        description: 'Nu s-a putut descărca documentul.',
+        description: 'Exportul cheltuielii a eșuat.',
         variant: 'destructive'
       });
     }
